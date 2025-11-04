@@ -13,10 +13,22 @@ class TransactionModel(BaseModel):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(
         CategoryModel,
-        default=TypeTransactionChoices.DEFAULT,
+        default='UNDEFINED',
         on_delete=models.SET_DEFAULT,
     )
-    
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+
+        if is_new:
+            if self.type_transaction == TypeTransactionChoices.RECIPE:
+                self.account.balance += self.value
+            else:
+                self.account.balance -= self.value
+
+            self.account.save()
+        
     class Meta:
         verbose_name = "Transação"
         verbose_name_plural = "Transações"
