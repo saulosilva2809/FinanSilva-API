@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: finansilva_web
+    depends_on:
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      PYTHONUNBUFFERED: "1"
+    env_file:
+      - .env
+    working_dir: /app/src
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    ports:
+      - "8000:8000"
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+  redis:
+    image: redis:7-alpine
+    container_name: finansilva_redis
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    container_name: finansilva_celery
+    depends_on:
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      PYTHONUNBUFFERED: "1"
+    env_file:
+      - .env
+    working_dir: /app/src
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    command: celery -A core worker -l info
+
+  beat:
+    build: .
+    container_name: finansilva_celery_beat
+    depends_on:
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      PYTHONUNBUFFERED: "1"
+    env_file:
+      - .env
+    working_dir: /app/src
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    command: celery -A core beat -l info
+
+  flower:
+    build: .
+    container_name: finansilva_flower
+    depends_on:
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      CELERY_BROKER_URL: redis://redis:6379/0
+      PYTHONUNBUFFERED: "1"
+    env_file:
+      - .env
+    working_dir: /app/src
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    ports:
+      - "5555:5555"
+    command: celery -A core flower --port=5555 --broker=redis://redis:6379/0
+
+networks:
+  default:
+    name: finansilva_net
