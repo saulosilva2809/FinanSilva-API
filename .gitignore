@@ -1,0 +1,70 @@
+# Arquivos de SO
+.DS_Store
+Thumbs.db
+
+# Python básico
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# Builds e distribuição
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Logs e PIDs
+logs/
+*.log
+*.pid
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# Tipagem / Linters
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Django
+db.sqlite3
+*.sqlite3
+*.db
+local_settings.py
+# Arquivos gerados por collectstatic (não versionar)
+staticfiles/
+# Uploads de usuário (remova se quiser versionar)
+media/
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+src/celerybeat-schedule
+
+# Variáveis de ambiente
+.env
+.env.*
+*.env
+
+# IDEs/Editor
+.vscode/
+.idea/
+
+# Docker
+docker-compose.override.yml
