@@ -4,6 +4,7 @@ from .choices import TypeTransactionChoices
 from apps.account.models import AccountModel
 from apps.base.models import BaseModel
 from apps.category.models import CategoryModel
+from apps.category.models import SubCategoryModel
 
 
 class TransactionModel(BaseModel):
@@ -13,8 +14,15 @@ class TransactionModel(BaseModel):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(
         CategoryModel,
-        default='UNDEFINED',
-        on_delete=models.SET_DEFAULT,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    subcategory = models.ForeignKey(
+        SubCategoryModel,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
     )
 
     def save(self, *args, **kwargs):
