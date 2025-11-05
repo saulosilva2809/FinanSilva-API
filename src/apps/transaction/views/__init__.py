@@ -1,1 +1,1 @@
-from .transaction_view import TransactionListCreateView
+from .transaction_view import TransactionListCreateView, TransactionRetrieveUpdateDestroyView

@@ -1,2 +1,3 @@
 from .create_transaction_serializer import CreateTransactionSerializer
+from .update_transaction_serializer import UpdateTransactionSerializer
 from .view_transaction_serializer import ViewTransactionSerializer
