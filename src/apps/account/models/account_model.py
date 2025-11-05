@@ -6,7 +6,7 @@ from apps.base.models import BaseModel
 
 
 class AccountModel(BaseModel):
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='accounts')
     name = models.CharField(max_length=200)
     bank = models.CharField(
         max_length=30,

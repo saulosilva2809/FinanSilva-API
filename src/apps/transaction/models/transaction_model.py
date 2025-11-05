@@ -8,7 +8,7 @@ from apps.category.models import SubCategoryModel
 
 
 class TransactionModel(BaseModel):
-    account = models.ForeignKey(AccountModel, on_delete=models.CASCADE)
+    account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='transactions')
     type_transaction = models.CharField(choices=TypeTransactionChoices.choices)
     value = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(null=True, blank=True)
@@ -17,12 +17,14 @@ class TransactionModel(BaseModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
+        related_name='transactions'
     )
     subcategory = models.ForeignKey(
         SubCategoryModel,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        related_name='transactions'
     )
 
     def save(self, *args, **kwargs):
