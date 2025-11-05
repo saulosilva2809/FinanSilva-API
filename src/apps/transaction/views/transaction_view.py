@@ -11,7 +11,7 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return TransactionModel.objects.filter(account_in=self.request.user.accounts)
+        return TransactionModel.objects.filter(account__in=self.request.user.accounts.all())
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
