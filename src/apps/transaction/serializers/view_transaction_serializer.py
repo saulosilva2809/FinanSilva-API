@@ -6,4 +6,4 @@ from apps.transaction.models import TransactionModel
 class ViewTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionModel
-        fields = ('__all__',)
+        fields = '__all__'
