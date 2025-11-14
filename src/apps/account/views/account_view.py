@@ -16,7 +16,24 @@ class AccountListCreateView(generics.ListCreateAPIView):
     pagination_class = PaginationAPI
 
     def get_queryset(self):
-        return AccountModel.objects.filter(user=self.request.user)
+        queryset = AccountModel.objects.filter(user=self.request.user)
+        params = self.request.query_params
+
+        # filters
+        name = params.get('name')
+        bank = params.get('bank')
+        type_account = params.get('type_account')
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
+        if bank:
+            queryset = queryset.filter(bank=bank)
+
+        if type_account:
+            queryset = queryset.filter(type_account=type_account)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -26,7 +43,6 @@ class AccountListCreateView(generics.ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         summary = AccountSummary(queryset).set_response()
-        # TODO: adicionar mais informações relevantes no summary (gastos por categoria e etc)
 
         # pagination
         paginator = self.pagination_class()
