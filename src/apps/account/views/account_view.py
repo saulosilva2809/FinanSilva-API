@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from rest_framework.response import Response
 
 from apps.account.models import AccountModel
 from apps.account.serializers import (
@@ -6,10 +7,13 @@ from apps.account.serializers import (
     UpdateAccountSerializer,
     ViewAccountSerializer
 )
+from apps.account.services import AccountSummary
+from apps.base.pagination import PaginationAPI
 
 
 class AccountListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = PaginationAPI
 
     def get_queryset(self):
         return AccountModel.objects.filter(user=self.request.user)
@@ -18,7 +22,29 @@ class AccountListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return CreateAccountSerializer
         return ViewAccountSerializer
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        summary = AccountSummary(queryset).set_response()
+        # TODO: adicionar mais informações relevantes no summary (gastos por categoria e etc)
 
+        # pagination
+        paginator = self.pagination_class()
+        paginator.summary = summary
+
+        # delega paginação/response ao DRF usando o paginator que preenche summary
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        # fallback não paginado
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'total_accounts': total_accounts,
+            'total_balance': total_balance,
+            'accounts': serializer.data
+        })
 
 class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
