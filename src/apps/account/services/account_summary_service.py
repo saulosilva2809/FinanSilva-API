@@ -15,32 +15,8 @@ class AccountSummary:
 
     def total_values(self):
         total_accounts = self.queryset.count()
-        total_balance = self.queryset.aggregate(total=Sum("balance"))["total"] or 0
 
-        total_recipe = (
-            TransactionModel.objects
-            .filter(
-                account__in=self.queryset,
-                type_transaction=TypeTransactionChoices.RECIPE
-            )
-            .aggregate(total=Sum("value"))["total"] or 0
-        )
-
-        total_expense = (
-            TransactionModel.objects
-            .filter(
-                account__in=self.queryset,
-                type_transaction=TypeTransactionChoices.EXPENSE
-            )
-            .aggregate(total=Sum("value"))["total"] or 0
-        )
-
-        return {
-            "total_accounts": total_accounts,
-            "total_balance": total_balance,
-            "total_recipe": total_recipe,
-            "total_expense": total_expense,
-        }
+        return {"total_accounts": total_accounts,}
     
     def number_accounts_by_type(self): # métrica que retorna quantidade de contas por tipo
         qs = (
