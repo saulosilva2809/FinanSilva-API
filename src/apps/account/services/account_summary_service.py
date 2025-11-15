@@ -42,7 +42,7 @@ class AccountSummary:
             "total_expense": total_expense,
         }
     
-    def count_by_type_accounts(self):
+    def count_by_type_accounts(self): # métrica que retorna quantidade de contas por tipo
         qs = (
             self.queryset
             .values('type_account')
