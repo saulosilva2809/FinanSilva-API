@@ -42,7 +42,7 @@ class AccountSummary:
             "total_expense": total_expense,
         }
     
-    def count_by_type_accounts(self): # métrica que retorna quantidade de contas por tipo
+    def number_accounts_by_type(self): # métrica que retorna quantidade de contas por tipo
         qs = (
             self.queryset
             .values('type_account')
@@ -53,7 +53,7 @@ class AccountSummary:
         )
 
         return {
-            'count_by_type_accounts': qs
+            'number_accounts_by_type': qs
         }
 
 
@@ -133,7 +133,7 @@ class AccountSummary:
         # ** para fazer merge de dicts
         return {
             **self.total_values(),
-            **self.count_by_type_accounts(),
+            **self.number_accounts_by_type(),
             # **self.values_by_category(),
             # **self.get_monthly_summary(),
         }
