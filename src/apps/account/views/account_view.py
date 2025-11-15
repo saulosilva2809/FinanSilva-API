@@ -56,6 +56,8 @@ class AccountListCreateView(generics.ListCreateAPIView):
 
         # fallback não paginado
         serializer = self.get_serializer(queryset, many=True)
+
+        # TODO: verificar essa response
         return Response({
             'total_accounts': total_accounts,
             'total_balance': total_balance,
