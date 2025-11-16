@@ -1,15 +1,14 @@
 from django.db.models import Sum
 
-from apps.account.models import AccountModel
 from apps.account.services import AccountSummary
 from apps.transaction.models import TransactionModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
 # TODO: continuar trabalhando no Dashboard
 class DashboardMetrics(AccountSummary):
-    def __init__(self, request):
+    def __init__(self, request, queryset):
         self.request = request
-        self.queryset = AccountModel.objects.filter(user=request.user)
+        self.queryset = queryset
 
     def total_values(self):
         context = super().total_values()
