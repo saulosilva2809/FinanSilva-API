@@ -7,7 +7,6 @@ from apps.account.serializers import (
     UpdateAccountSerializer,
     ViewAccountSerializer
 )
-from apps.account.services import AccountSummary
 from apps.base.pagination import PaginationAPI
 
 
@@ -42,11 +41,9 @@ class AccountListCreateView(generics.ListCreateAPIView):
     
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        summary = AccountSummary(queryset).set_response()
 
         # pagination
         paginator = self.pagination_class()
-        paginator.summary = summary
 
         # delega paginação/response ao DRF usando o paginator que preenche summary
         page = paginator.paginate_queryset(queryset, request, view=self)
