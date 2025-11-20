@@ -1,22 +1,19 @@
-from datetime import timedelta
+from datetime import timedelta, date
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 
-from apps.account.services import AccountSummary
+from apps.account.models.choices import TypeAccountChoices
 from apps.transaction.models import TransactionModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
 # TODO: continuar trabalhando no Dashboard
-class DashboardMetrics(AccountSummary):
+class DashboardMetrics():
     def __init__(self, request, queryset):
-        super().__init__(queryset)
         self.request = request
         self.queryset = queryset
-        self.one_year_ago = self.today.replace(day=1) - timedelta(days=365)
+        self.one_year_ago = date.today() - timedelta(days=365)
 
     def total_values(self):
-        context = super().total_values()
-
         total_balance = self.queryset.aggregate(total=Sum("balance"))["total"] or 0
 
         total_recipe = (
@@ -37,11 +34,19 @@ class DashboardMetrics(AccountSummary):
             .aggregate(total=Sum("value"))["total"] or 0
         )
 
-        context['total_balance'] = total_balance
-        context['total_recipe'] = total_recipe
-        context['total_expense'] = total_expense
+        total_saved = self.queryset.filter(
+            type_account__in=[
+                TypeAccountChoices.INVESTMENT, 
+                TypeAccountChoices.SAVINGS
+            ]
+        ).aggregate(total=Sum("balance"))["total"] or 0
 
-        return context
+        return {
+            'total_balance': total_balance,
+            'total_recipe': total_recipe,
+            'total_expense': total_expense,
+            'total_saved': total_saved,
+        }
 
     def values_by_category(self):
         recipes_qs = (
@@ -67,14 +72,14 @@ class DashboardMetrics(AccountSummary):
         )
 
         return {
-            "recipes_by_category": {
-                item["category__name"]: item["total"] or 0
+            "recipes_by_category": [
+                {'category': item["category__name"], 'value': item["total"] or 0}
                 for item in recipes_qs
-            },
-            "expenses_by_category": {
-                item["category__name"]: item["total"] or 0
+            ],
+            "expenses_by_category": [
+                {'category': item["category__name"], 'value': item["total"] or 0}
                 for item in expenses_qs
-            },
+            ],
         }
 
     def get_monthly_summary(self):
@@ -104,20 +109,40 @@ class DashboardMetrics(AccountSummary):
             .order_by("month")
         )
 
-        return {
-            "recipes_by_month": {
-                item["month"].strftime("%Y-%m"): item["total"] or 0
-                for item in recipes_qs
-            },
-            "expenses_by_month": {
-                item["month"].strftime("%Y-%m"): item["total"] or 0
-                for item in expenses_qs
-            },
+        recipes_by_month = {
+            item["month"].strftime("%Y-%m"): item["total"] or 0
+            for item in recipes_qs
         }
+        expenses_by_month = {
+            item["month"].strftime("%Y-%m"): item["total"] or 0
+            for item in expenses_qs
+        }
+        months = set(recipes_by_month) | set(expenses_by_month)
+        
+        summary = {}
+        for month in months:
+            recipes = recipes_by_month.get(month, 0)
+            expenses = expenses_by_month.get(month, 0)
+
+            summary[month] = {
+                'recipes': recipes,
+                'expenses': expenses,
+                'balance': recipes - expenses
+            }
+
+        return summary
+    
+    def recents_transactions(self):
+        transactions = TransactionModel.objects.order_by('-created_at')[:5].values(
+            'account', 'type_transaction', 'value', 'category', 'created_at'
+        )
+
+        return transactions
     
     def set_response(self):
-        context = super().set_response()
-        context['values_by_category'] = self.values_by_category()
-        context['monthly_summary'] = self.get_monthly_summary()
-
-        return context
+        return {
+            'total_values': self.total_values(),
+            'values_by_category': self.values_by_category(),
+            'monthly_summary': self.get_monthly_summary(),
+            'recents_transactions': self.recents_transactions(),
+        }
