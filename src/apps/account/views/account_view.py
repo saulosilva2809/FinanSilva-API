@@ -38,28 +38,6 @@ class AccountListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return CreateAccountSerializer
         return ViewAccountSerializer
-    
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-
-        # pagination
-        paginator = self.pagination_class()
-
-        # delega paginação/response ao DRF usando o paginator que preenche summary
-        page = paginator.paginate_queryset(queryset, request, view=self)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
-
-        # fallback não paginado
-        serializer = self.get_serializer(queryset, many=True)
-
-        # TODO: verificar essa response
-        return Response({
-            'total_accounts': total_accounts,
-            'total_balance': total_balance,
-            'accounts': serializer.data
-        })
 
 class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
