@@ -1,6 +1,7 @@
-from datetime import timedelta, date
+from datetime import timedelta
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
+from django.utils import timezone
 
 from apps.account.models.choices import TypeAccountChoices
 from apps.transaction.models import TransactionModel
@@ -11,7 +12,7 @@ class DashboardMetrics():
     def __init__(self, request, queryset):
         self.request = request
         self.queryset = queryset
-        self.one_year_ago = date.today() - timedelta(days=365)
+        self.one_year_ago = timezone.now() - timedelta(days=365)
 
     def total_values(self):
         total_balance = self.queryset.aggregate(total=Sum("balance"))["total"] or 0
