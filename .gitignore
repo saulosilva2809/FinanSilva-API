@@ -59,8 +59,6 @@ src/celerybeat-schedule
 
 # Variáveis de ambiente
 .env
-.env.*
-*.env
 
 # IDEs/Editor
 .vscode/
