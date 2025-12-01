@@ -1,1 +1,2 @@
+from .recurring_transaction_view import RecurringTransactionListCreateView, RecurringTransactionRetrieveUpdateDestroyView
 from .transaction_view import TransactionListCreateView, TransactionRetrieveUpdateDestroyView

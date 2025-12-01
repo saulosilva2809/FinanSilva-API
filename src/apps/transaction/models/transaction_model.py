@@ -1,5 +1,6 @@
 from django.db import models
 
+from . import RecurringTransactionModel
 from .choices import TypeTransactionChoices
 from apps.account.models import AccountModel
 from apps.base.models import BaseModel
@@ -25,6 +26,13 @@ class TransactionModel(BaseModel):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='transactions'
+    )
+    recurring_root = models.ForeignKey(
+        RecurringTransactionModel,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='generated_transactions'
     )
 
     def save(self, *args, **kwargs):

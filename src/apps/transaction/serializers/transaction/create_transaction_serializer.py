@@ -6,7 +6,7 @@ from apps.transaction.models import TransactionModel
 class CreateTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionModel
-        fields = ('account', 'type_transaction', 'value', 'description', 'category', 'subcategory')
+        fields = ('id', 'account', 'type_transaction', 'value', 'description', 'category', 'subcategory')
 
     def validate_value(self, value):
         if value < 0:
