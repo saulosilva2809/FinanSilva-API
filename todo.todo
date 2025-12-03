@@ -1,3 +1,2 @@
 # TODO: toda recurring_transaction deve ser descontada ás 00:01 do dia
-# TODO: quando editar uma recurring_transaction a próxima no celery já deve vir editada
 # TODO: quando apagar uma recurring_transaction apagar as tasks programadas

@@ -30,6 +30,7 @@ def update_or_create_task_celery_to_recurring_transaction(sender, instance, crea
                     "task": "apps.base.tasks.process_recurring_transaction_task.process_recurring_transaction",
                     "clocked": clocked,
                     "one_off": True,
+                    "enabled": True,
                     "args": json.dumps([str(instance.id)]), 
                 }
             )
