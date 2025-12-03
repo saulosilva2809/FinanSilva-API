@@ -7,9 +7,6 @@ from apps.transaction.models import RecurringTransactionModel, TransactionModel
 def process_recurring_transaction(self, recurring_id):
     try:
         rec = RecurringTransactionModel.objects.get(id=recurring_id)
-
-        if not rec.active:
-            return
         
         TransactionModel.objects.create(
             account=rec.account,
