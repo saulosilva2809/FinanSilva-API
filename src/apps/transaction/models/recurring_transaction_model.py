@@ -1,6 +1,7 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.db import models
+from django.utils.timezone import now, make_aware, is_naive
 
 from .choices import NextRunDateChoices, TypeTransactionChoices
 from apps.account.models import AccountModel
@@ -9,7 +10,8 @@ from apps.category.models import CategoryModel, SubCategoryModel
 
 
 def default_datetime():
-    return datetime.now()
+    return now()  # sempre timezone-aware
+
 
 class RecurringTransactionModel(BaseModel):
     account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='recurring_transactions')
@@ -20,19 +22,12 @@ class RecurringTransactionModel(BaseModel):
     next_run_date = models.DateTimeField()
     active = models.BooleanField(default=True)
     category = models.ForeignKey(
-        CategoryModel,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='recurring_transactions'
+        CategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions'
     )
     subcategory = models.ForeignKey(
-        SubCategoryModel,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='recurring_transactions'
+        SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions'
     )
+
     init_date = models.DateTimeField(default=default_datetime)
     executed_first_time = models.BooleanField(default=False)
 
@@ -55,11 +50,25 @@ class RecurringTransactionModel(BaseModel):
         else:
             delta = relativedelta(**{config['time']: config['value']})
 
-        return self.init_date + delta
+        next_date = self.init_date + delta
+
+        if is_naive(next_date):
+            next_date = make_aware(next_date)
+
+        return next_date
 
     def save(self, *args, **kwargs):
+        # garante que init_date é aware
+        if self.init_date and is_naive(self.init_date):
+            self.init_date = make_aware(self.init_date)
+
+        # gera o próximo run_date se não existir
         if not self.next_run_date:
             self.next_run_date = self.set_next_run_date()
+
+        # garante next_run_date aware SEMPRE
+        if self.next_run_date and is_naive(self.next_run_date):
+            self.next_run_date = make_aware(self.next_run_date)
 
         super().save(*args, **kwargs)
 
