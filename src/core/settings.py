@@ -155,3 +155,51 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,                # refresh antigo é invalidado
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "dev": {
+            "format": "[%(levelname)s] %(name)s: %(message)s",
+        },
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "dev",
+        },
+    },
+
+    "loggers": {
+        # Logs padrão do Django
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+
+        # Requests com erro
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+
+        # Seus apps
+        "apps": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+
+        # Celery
+        "celery": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
