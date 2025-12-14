@@ -39,6 +39,7 @@ class AccountListCreateView(generics.ListCreateAPIView):
             return CreateAccountSerializer
         return ViewAccountSerializer
 
+
 class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'pk'
