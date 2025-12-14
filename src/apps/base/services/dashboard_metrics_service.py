@@ -7,19 +7,42 @@ from apps.account.models.choices import TypeAccountChoices
 from apps.transaction.models import TransactionModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
-# TODO: continuar trabalhando no Dashboard
+
 class DashboardMetrics():
-    def __init__(self, request, queryset):
+    def __init__(
+            self, request, queryset,
+            category=None, subcategory=None,
+            start_date=None, end_date=None
+        ):
         self.request = request
         self.queryset = queryset
         self.one_year_ago = timezone.now() - timedelta(days=365)
+        self.category = category
+        self.subcategory = subcategory
+        self.start_date = start_date
+        self.end_date = end_date
+        self.transactions = self._filter_transactions()
 
-    def total_values(self):
-        total_balance = self.queryset.aggregate(total=Sum("balance"))["total"] or 0
+    def _filter_transactions(self):
+        filters = {"account__in": self.queryset}
 
+        if self.start_date:
+            filters["created_at__gte"] = self.start_date
+
+        if self.end_date:
+            filters["created_at__lte"] = self.end_date
+
+        if self.category:
+            filters['category'] = self.category
+
+        if self.subcategory:
+            filters['subcategory'] = self.subcategory
+
+        return TransactionModel.objects.filter(**filters)
+
+    def total_filtered_values(self):
         total_recipe = (
-            TransactionModel.objects
-            .filter(
+            self.transactions.filter(
                 account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.RECIPE
             )
@@ -27,13 +50,21 @@ class DashboardMetrics():
         )
 
         total_expense = (
-            TransactionModel.objects
-            .filter(
+            self.transactions.filter(
                 account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.EXPENSE
             )
             .aggregate(total=Sum("value"))["total"] or 0
         )
+
+        return {
+            'total_balance': total_recipe - total_expense,
+            'total_recipe': total_recipe,
+            'total_expense': total_expense,
+        }
+    
+    def total_global_values(self):
+        total_balance = self.queryset.aggregate(total=Sum("balance"))["total"] or 0
 
         total_saved = self.queryset.filter(
             type_account__in=[
@@ -44,15 +75,12 @@ class DashboardMetrics():
 
         return {
             'total_balance': total_balance,
-            'total_recipe': total_recipe,
-            'total_expense': total_expense,
             'total_saved': total_saved,
         }
 
     def values_by_category(self):
         recipes_qs = (
-            TransactionModel.objects
-            .filter(
+            self.transactions.filter(
                 account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.RECIPE
             )
@@ -62,8 +90,7 @@ class DashboardMetrics():
         )
 
         expenses_qs = (
-            TransactionModel.objects
-            .filter(
+            self.transactions.filter(
                 account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.EXPENSE
             )
@@ -85,8 +112,7 @@ class DashboardMetrics():
 
     def get_monthly_summary(self):
         recipes_qs = (
-            TransactionModel.objects
-            .filter(
+            self.transactions.filter(
                 account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.RECIPE,
                 created_at__gte=self.one_year_ago,
@@ -98,8 +124,7 @@ class DashboardMetrics():
         )
 
         expenses_qs = (
-            TransactionModel.objects
-            .filter(
+            self.transactions.filter(
                 account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.EXPENSE,
                 created_at__gte=self.one_year_ago,
@@ -134,7 +159,7 @@ class DashboardMetrics():
         return summary
     
     def recents_transactions(self):
-        transactions = TransactionModel.objects.order_by('-created_at')[:5].values(
+        transactions = self.transactions.filter(account__in=self.queryset).order_by('-created_at')[:5].values(
             'account', 'type_transaction', 'value', 'category', 'created_at'
         )
 
@@ -142,7 +167,8 @@ class DashboardMetrics():
     
     def set_response(self):
         return {
-            'total_values': self.total_values(),
+            'total_global_values': self.total_global_values(),
+            'total_filtered_values': self.total_filtered_values(),
             'values_by_category': self.values_by_category(),
             'monthly_summary': self.get_monthly_summary(),
             'recents_transactions': self.recents_transactions(),
