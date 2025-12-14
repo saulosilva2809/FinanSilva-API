@@ -10,7 +10,7 @@ from apps.category.models import CategoryModel, SubCategoryModel
 
 
 def default_datetime():
-    return now()  # sempre timezone-aware
+    return now()
 
 
 class RecurringTransactionModel(BaseModel):
@@ -21,36 +21,33 @@ class RecurringTransactionModel(BaseModel):
     frequency = models.CharField(choices=NextRunDateChoices, max_length=50)
     next_run_date = models.DateTimeField()
     active = models.BooleanField(default=True)
-    category = models.ForeignKey(
-        CategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions'
-    )
-    subcategory = models.ForeignKey(
-        SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions'
-    )
-
+    category = models.ForeignKey(CategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
+    subcategory = models.ForeignKey(SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
     init_date = models.DateTimeField(default=default_datetime)
     executed_first_time = models.BooleanField(default=False)
 
     def set_next_run_date(self):
         frequency_dict = {
-            NextRunDateChoices.DAILY:     {'time': 'days',   'value': 1},
-            NextRunDateChoices.WEEKLY:    {'time': 'weeks',  'value': 1},
-            NextRunDateChoices.BIWEEKLY:  {'time': 'days',   'value': 14},
-            NextRunDateChoices.MONTHLY:   {'time': 'months', 'value': 1},
+            NextRunDateChoices.DAILY: {'time': 'days', 'value': 1},
+            NextRunDateChoices.WEEKLY: {'time': 'weeks', 'value': 1},
+            NextRunDateChoices.BIWEEKLY: {'time': 'days', 'value': 14},
+            NextRunDateChoices.MONTHLY: {'time': 'months', 'value': 1},
             NextRunDateChoices.BIMONTHLY: {'time': 'months', 'value': 2},
             NextRunDateChoices.QUARTERLY: {'time': 'months', 'value': 3},
-            NextRunDateChoices.SEMIANNUAL:{'time': 'months', 'value': 6},
-            NextRunDateChoices.ANNUAL:    {'time': 'years',  'value': 1},
+            NextRunDateChoices.SEMIANNUAL: {'time': 'months', 'value': 6},
+            NextRunDateChoices.ANNUAL: {'time': 'years', 'value': 1},
         }
 
         config = frequency_dict[self.frequency]
+
+        base = now()
 
         if config['time'] in ('days', 'weeks'):
             delta = timedelta(**{config['time']: config['value']})
         else:
             delta = relativedelta(**{config['time']: config['value']})
 
-        next_date = self.init_date + delta
+        next_date = base + delta
 
         if is_naive(next_date):
             next_date = make_aware(next_date)
@@ -58,16 +55,10 @@ class RecurringTransactionModel(BaseModel):
         return next_date
 
     def save(self, *args, **kwargs):
-        # garante que init_date é aware
-        if self.init_date and is_naive(self.init_date):
-            self.init_date = make_aware(self.init_date)
-
-        # gera o próximo run_date se não existir
         if not self.next_run_date:
             self.next_run_date = self.set_next_run_date()
 
-        # garante next_run_date aware SEMPRE
-        if self.next_run_date and is_naive(self.next_run_date):
+        if is_naive(self.next_run_date):
             self.next_run_date = make_aware(self.next_run_date)
 
         super().save(*args, **kwargs)
