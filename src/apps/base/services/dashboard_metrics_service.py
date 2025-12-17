@@ -2,9 +2,10 @@ from datetime import timedelta
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
+from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from apps.account.models.choices import TypeAccountChoices
-from apps.transaction.models import TransactionModel
+from apps.transaction.models import TransactionModel, RecurringTransactionModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
 
@@ -22,6 +23,15 @@ class DashboardMetrics():
         self.start_date = start_date
         self.end_date = end_date
         self.transactions = self._filter_transactions()
+
+    def _has_filters(self):
+        return any([
+            self.category,
+            self.subcategory,
+            self.start_date,
+            self.end_date,
+        ])
+
 
     def _filter_transactions(self):
         filters = {"account__in": self.queryset}
@@ -43,7 +53,6 @@ class DashboardMetrics():
     def total_filtered_values(self):
         total_recipe = (
             self.transactions.filter(
-                account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.RECIPE
             )
             .aggregate(total=Sum("value"))["total"] or 0
@@ -51,7 +60,6 @@ class DashboardMetrics():
 
         total_expense = (
             self.transactions.filter(
-                account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.EXPENSE
             )
             .aggregate(total=Sum("value"))["total"] or 0
@@ -81,41 +89,44 @@ class DashboardMetrics():
     def values_by_category(self):
         recipes_qs = (
             self.transactions.filter(
-                account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.RECIPE
             )
             .exclude(category__isnull=True)
-            .values("category__name")
+            .values("category__name", 'category__id')
             .annotate(total=Sum("value"))
         )
 
         expenses_qs = (
             self.transactions.filter(
-                account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.EXPENSE
             )
             .exclude(category__isnull=True)
-            .values("category__name")
+            .values("category__name", 'category__id')
             .annotate(total=Sum("value"))
         )
 
         return {
-            "recipes_by_category": [
-                {'category': item["category__name"], 'value': item["total"] or 0}
+            "income_by_category": [{
+                'category': {
+                    'name': item["category__name"],
+                    'id': item["category__id"],
+                }, 
+                'value': item["total"] or 0}
                 for item in recipes_qs
             ],
-            "expenses_by_category": [
-                {'category': item["category__name"], 'value': item["total"] or 0}
+            "expenses_by_category": [{
+                'category': {
+                    'name': item["category__name"],
+                    'id': item["category__id"],
+                },
+                'value': item["total"] or 0}
                 for item in expenses_qs
-            ],
-        }
+            ]}
 
     def get_monthly_summary(self):
         recipes_qs = (
             self.transactions.filter(
-                account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.RECIPE,
-                created_at__gte=self.one_year_ago,
             )
             .annotate(month=TruncMonth("created_at"))
             .values("month")
@@ -125,9 +136,7 @@ class DashboardMetrics():
 
         expenses_qs = (
             self.transactions.filter(
-                account__in=self.queryset,
                 type_transaction=TypeTransactionChoices.EXPENSE,
-                created_at__gte=self.one_year_ago,
             )
             .annotate(month=TruncMonth("created_at"))
             .values("month")
@@ -158,18 +167,69 @@ class DashboardMetrics():
 
         return summary
     
-    def recents_transactions(self):
-        transactions = self.transactions.filter(account__in=self.queryset).order_by('-created_at')[:5].values(
-            'account', 'type_transaction', 'value', 'category', 'created_at'
+    def recent_transactions(self):
+        transactions = (
+            self.transactions
+            .select_related('account', 'category')
+            .order_by('-created_at')[:5]
         )
 
-        return transactions
+        return [
+            {
+                "id": ts.id,
+                "value": float(ts.value),
+                "type_transaction": ts.type_transaction,
+                "created_at": ts.created_at,
+                "account": {
+                    "id": ts.account.id,
+                    "name": ts.account.name,
+                },
+                "category": {
+                    "id": ts.category.id,
+                    "name": ts.category.name,
+                } if ts.category else None,
+            }
+            for ts in transactions
+        ]
+
+    
+    def upcoming_transactions(self):
+        rec_transactions = RecurringTransactionModel.objects.filter(
+            active=True
+        ).select_related(
+            'account', 'category'
+        ).order_by('next_run_date')[:5]
+
+        return [
+            {
+                'id': ts.id,
+                'value': float(ts.value),
+                'type_transaction': ts.type_transaction,
+                'frequency': ts.frequency,
+                'next_run_date': ts.next_run_date,
+                'init_date': ts.init_date,
+                'account': {
+                    'id': ts.account.id,
+                    'name': ts.account.name,
+                },
+                'category': {
+                    'id': ts.category.id,
+                    'name': ts.category.name,
+                } if ts.category else None,
+            }
+            for ts in rec_transactions
+        ]
     
     def set_response(self):
-        return {
+        response = {
             'total_global_values': self.total_global_values(),
-            'total_filtered_values': self.total_filtered_values(),
             'values_by_category': self.values_by_category(),
             'monthly_summary': self.get_monthly_summary(),
-            'recents_transactions': self.recents_transactions(),
+            'recents_transactions': self.recent_transactions(),
+            'upcoming_transactions': self.upcoming_transactions(),
         }
+
+        if self._has_filters():
+            response['total_filtered_values'] = self.total_filtered_values()
+
+        return response
