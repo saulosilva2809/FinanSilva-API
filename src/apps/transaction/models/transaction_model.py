@@ -17,8 +17,8 @@ class TransactionModel(BaseModel):
     )
     processed = models.BooleanField(default=False)
     account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='transactions')
-    type_transaction = models.CharField(choices=TypeTransactionChoices.choices)
     value = models.DecimalField(max_digits=10, decimal_places=2)
+    type_transaction = models.CharField(choices=TypeTransactionChoices.choices)
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(
         CategoryModel,

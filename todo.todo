@@ -2,4 +2,3 @@
 # TODO: retirar lógica de adiciona/remover saldo do save
 # TODO: módulo de transaferencias entre contas
 # TODO: implementar filtros no endpoint de transaction
-# TODO: refatorar serializer de rec_transaction
