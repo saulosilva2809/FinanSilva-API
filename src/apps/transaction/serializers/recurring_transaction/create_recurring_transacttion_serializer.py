@@ -6,7 +6,7 @@ from apps.transaction.models import RecurringTransactionModel
 class CreateRecurringTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecurringTransactionModel
-        fields = ('id', 'account', 'value', 'type_transaction', 'description', 'frequency', 'active', 'category', 'subcategory', 'init_date')
+        fields = ('id', 'account', 'value', 'type_transaction', 'description', 'frequency', 'active', 'category', 'subcategory', 'init_date', 'execute_first_immediately')
 
     def validate_value(self, value):
         if value < 0:

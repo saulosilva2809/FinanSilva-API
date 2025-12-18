@@ -1,3 +1,5 @@
+import uuid
+
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.db import models
@@ -14,6 +16,12 @@ def default_datetime():
 
 
 class RecurringTransactionModel(BaseModel):
+    idempotency_key = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False
+    )
+    processed = models.BooleanField(default=False)
     account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='recurring_transactions')
     value = models.DecimalField(max_digits=10, decimal_places=2)
     type_transaction = models.CharField(choices=TypeTransactionChoices.choices, default='')
@@ -25,6 +33,7 @@ class RecurringTransactionModel(BaseModel):
     subcategory = models.ForeignKey(SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
     init_date = models.DateTimeField(default=default_datetime)
     executed_first_time = models.BooleanField(default=False)
+    execute_first_immediately = models.BooleanField(default=False)
 
     def set_next_run_date(self):
         frequency_dict = {
