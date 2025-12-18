@@ -15,15 +15,16 @@ def process_recurring_transaction(self, recurring_id):
         rec = RecurringTransactionModel.objects.get(id=recurring_id)
 
         logger.info('Criando Transaction com base em Recurring Transaction')
-        TransactionModel.objects.create(
-            account=rec.account,
-            type_transaction=rec.type_transaction,
-            value=rec.value,
-            description=rec.description,
-            category=rec.category,
-            subcategory=rec.subcategory,
-            recurring_root=rec,
-        )
+        if not rec.execute_first_immediately:
+            TransactionModel.objects.create(
+                account=rec.account,
+                type_transaction=rec.type_transaction,
+                value=rec.value,
+                description=rec.description,
+                category=rec.category,
+                subcategory=rec.subcategory,
+                recurring_root=rec,
+            )
 
         # marca primeira execução
         if not rec.executed_first_time:

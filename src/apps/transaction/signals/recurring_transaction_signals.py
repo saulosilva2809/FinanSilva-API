@@ -5,14 +5,13 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from apps.transaction.services import TransactionService
 from apps.transaction.models import RecurringTransactionModel
 
 
 @receiver(post_save, sender=RecurringTransactionModel)
 def create_task_celery_to_recurring_transaction(sender, instance, created, **kwargs):
     if created and instance.active:
-        run_date = instance.init_date if not instance.executed_first_time else instance.next_run_date
+        run_date = instance.next_run_date
 
         clocked = ClockedSchedule.objects.create(
             clocked_time=run_date
