@@ -5,6 +5,7 @@ from apps.transaction.models import TransactionModel
 
 
 class ListTransactionSerializer(serializers.ModelSerializer):
+    account = BaseMiniSerializer()
     category = BaseMiniSerializer()
     subcategory = BaseMiniSerializer()
 
@@ -12,8 +13,9 @@ class ListTransactionSerializer(serializers.ModelSerializer):
         model = TransactionModel
         fields = [
             'id',
-            'type_transaction',
             'value',
+            'type_transaction',
+            'account',
             'category',
             'subcategory',
         ]

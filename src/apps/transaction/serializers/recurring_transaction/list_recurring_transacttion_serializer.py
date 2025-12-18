@@ -1,25 +1,23 @@
 from rest_framework import serializers
 
 from apps.base.serializer import BaseMiniSerializer
-from apps.transaction.models import TransactionModel
+from apps.transaction.models import RecurringTransactionModel
 
 
-class DetailTransactionSerializer(serializers.ModelSerializer):
+class ListRecurringTransactionSerializer(serializers.ModelSerializer):
     account = BaseMiniSerializer()
     category = BaseMiniSerializer()
     subcategory = BaseMiniSerializer()
 
     class Meta:
-        model = TransactionModel
+        model = RecurringTransactionModel
         fields = [
             'id',
-            'created_at',
-            'updated_at',
             'value',
             'type_transaction',
-            'description',
+            'next_run_date',
+            'active',
             'account',
             'category',
-            'subcategory',
-            'recurring_root',
+            'subcategory'
         ]
