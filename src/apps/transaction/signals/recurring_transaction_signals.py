@@ -5,6 +5,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
+from apps.transaction.services import TransactionService
 from apps.transaction.models import RecurringTransactionModel
 
 

@@ -7,6 +7,7 @@ from apps.transaction.serializers import (
     ListTransactionSerializer,
     UpdateTransactionSerializer
 )
+from apps.transaction.services import TransactionService
 
 
 class TransactionListCreateView(generics.ListCreateAPIView):
@@ -19,6 +20,10 @@ class TransactionListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return CreateTransactionSerializer
         return ListTransactionSerializer
+    
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        TransactionService.create_transaction(instance)
 
 
 class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -32,3 +37,13 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         if self.request.method in ['PUT', 'PATCH']:
             return UpdateTransactionSerializer
         return DetailTransactionSerializer
+    
+    def perform_update(self, serializer):
+        old_instance = self.get_object()
+        new_instance = serializer.save()
+
+        TransactionService.update_transaction(
+            old_instance=old_instance,
+            new_instance=new_instance
+        )
+

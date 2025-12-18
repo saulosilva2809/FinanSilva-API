@@ -6,6 +6,7 @@ from apps.transaction.serializers import (
     UpdatRecurringTransactionSerializer,
     ViewRecurringTransactionSerializer
 )
+from apps.transaction.services import TransactionService
 
 
 class RecurringTransactionListCreateView(generics.ListCreateAPIView):
@@ -18,6 +19,12 @@ class RecurringTransactionListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return CreateRecurringTransactionSerializer
         return ViewRecurringTransactionSerializer
+    
+    def perform_create(self, serializer):
+        instance = serializer.save()
+
+        if instance.execute_first_immediately:
+            TransactionService.create_transaction_from_recurring_transaction(instance)
 
 
 class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

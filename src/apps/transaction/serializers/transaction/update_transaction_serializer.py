@@ -12,18 +12,3 @@ class UpdateTransactionSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("O valor da transação não pode ser negativo.")
         return value
-    
-    def update(self, instance, validated_data):
-        new_value = validated_data.get('value', instance.value)
-
-        if instance.type_transaction == 'RECEITA':
-            instance.account.balance -= instance.value
-            instance.account.balance += new_value
-            instance.account.save()
-        
-        else:
-            instance.account.balance += instance.value
-            instance.account.balance -= new_value
-            instance.account.save()
-
-        return super().update(instance, validated_data)
