@@ -3,8 +3,9 @@ from rest_framework import generics, permissions
 from apps.transaction.models import RecurringTransactionModel
 from apps.transaction.serializers import (
     CreateRecurringTransactionSerializer,
+    DetailRecurringTransactionSerializer,
+    ListRecurringTransactionSerializer,
     UpdatRecurringTransactionSerializer,
-    ViewRecurringTransactionSerializer
 )
 from apps.transaction.services import TransactionService
 
@@ -18,7 +19,7 @@ class RecurringTransactionListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return CreateRecurringTransactionSerializer
-        return ViewRecurringTransactionSerializer
+        return ListRecurringTransactionSerializer
     
     def perform_create(self, serializer):
         instance = serializer.save()
@@ -37,4 +38,4 @@ class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestr
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return UpdatRecurringTransactionSerializer
-        return ViewRecurringTransactionSerializer
+        return DetailRecurringTransactionSerializer
