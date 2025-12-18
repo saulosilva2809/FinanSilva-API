@@ -27,7 +27,6 @@ class AccountModel(BaseModel):
             self.balance = self.initial_balance
         super().save(*args, **kwargs)
 
-
     def __str__(self):
         return f"{self.name} ({self.get_type_account_display()})"
 

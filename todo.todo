@@ -1,16 +1,5 @@
 # TODO: toda recurring_transaction deve ser descontada ás 00:01 do dia
-# TODO: incluir account_name em todos os serializers
-# TODO: separar serializers (criar o de list e o detail)
-# TODO: procurar lugares onde uma model retorna mais 2 (foreingkey)
-e padronizar como 
-
-"obj": {
-    "id": obj.id,
-    "name": obj.name,
-},
-"obj": {
-    "id": obj.id,
-    "name": obj.name,
-}
-
-# TODO: cadastrar transactions no sistema para testes
+# TODO: retirar lógica de adiciona/remover saldo do save
+# TODO: módulo de transaferencias entre contas
+# TODO: implementar filtros no endpoint de transaction
+# TODO: refatorar serializer de rec_transaction
