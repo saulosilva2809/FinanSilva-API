@@ -1,5 +1,7 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
 
+from apps.transaction.filters import TransactionFilter
 from apps.transaction.models import TransactionModel
 from apps.transaction.serializers import (
     CreateTransactionSerializer,
@@ -12,6 +14,8 @@ from apps.transaction.services import TransactionService
 
 class TransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TransactionFilter
 
     def get_queryset(self):
         return TransactionModel.objects.filter(account__in=self.request.user.accounts.all())
