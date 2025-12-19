@@ -11,7 +11,10 @@ from apps.transaction.models import RecurringTransactionModel
 @receiver(post_save, sender=RecurringTransactionModel)
 def create_task_celery_to_recurring_transaction(sender, instance, created, **kwargs):
     if created and instance.active:
-        run_date = instance.next_run_date
+        run_date = instance.init_date
+
+        if not run_date:
+            run_date = instance.next_run_date
 
         clocked = ClockedSchedule.objects.create(
             clocked_time=run_date
