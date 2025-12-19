@@ -13,6 +13,7 @@ from apps.transaction.services import TransactionService
 class RecurringTransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    # TODO: implementar filters com django-filter
     def get_queryset(self):
         return RecurringTransactionModel.objects.filter(account__in=self.request.user.accounts.all())
 
