@@ -31,9 +31,8 @@ class RecurringTransactionModel(BaseModel):
     active = models.BooleanField(default=True)
     category = models.ForeignKey(CategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
     subcategory = models.ForeignKey(SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
-    init_date = models.DateTimeField(default=default_datetime)
-    executed_first_time = models.BooleanField(default=False)
-    execute_first_immediately = models.BooleanField(default=False)
+    init_date = models.DateTimeField(null=True, blank=True)
+    executed_first_time = models.BooleanField(default=False) # se já foi processada alguma vez
 
     def set_next_run_date(self):
         frequency_dict = {
