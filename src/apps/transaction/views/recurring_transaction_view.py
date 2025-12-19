@@ -25,8 +25,7 @@ class RecurringTransactionListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         instance = serializer.save()
 
-        if instance.execute_first_immediately:
-            TransactionService.create_transaction_from_recurring_transaction(instance)
+        TransactionService.create_transaction_from_recurring_transaction(instance)
 
 
 class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
