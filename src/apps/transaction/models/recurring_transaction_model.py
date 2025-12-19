@@ -48,7 +48,7 @@ class RecurringTransactionModel(BaseModel):
 
         config = frequency_dict[self.frequency]
 
-        base = now()
+        base = self.init_date if self.init_date else now()
 
         if config['time'] in ('days', 'weeks'):
             delta = timedelta(**{config['time']: config['value']})
