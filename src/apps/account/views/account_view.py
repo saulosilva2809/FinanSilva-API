@@ -1,5 +1,4 @@
 from rest_framework import generics, permissions
-from rest_framework.response import Response
 
 from apps.account.models import AccountModel
 from apps.account.serializers import (
@@ -18,7 +17,7 @@ class AccountListCreateView(generics.ListCreateAPIView):
         queryset = AccountModel.objects.filter(user=self.request.user)
         params = self.request.query_params
 
-        # filters
+        # TODO: refatorar para usar django-filter
         name = params.get('name')
         bank = params.get('bank')
         type_account = params.get('type_account')

@@ -8,6 +8,7 @@ from apps.account.models import AccountModel
 class DashboardView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    # TODO: refatorar para usar django-filter
     def get_queryset(self, request):
         queryset = AccountModel.objects.filter(user=self.request.user)
         params = self.request.query_params

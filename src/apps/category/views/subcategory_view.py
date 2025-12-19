@@ -10,6 +10,7 @@ from apps.category.serializers import (
 class SubCategoryListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    # TODO: implementar filters com django-filter
     def get_queryset(self):
         return SubCategoryModel.objects.filter(
             category__account__in=self.request.user.accounts.all()
