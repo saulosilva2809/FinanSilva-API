@@ -11,10 +11,6 @@ from apps.base.models import BaseModel
 from apps.category.models import CategoryModel, SubCategoryModel
 
 
-def default_datetime():
-    return now()
-
-
 class RecurringTransactionModel(BaseModel):
     idempotency_key = models.UUIDField(
         default=uuid.uuid4,
