@@ -21,7 +21,6 @@ class DetailRecurringTransactionSerializer(serializers.ModelSerializer):
             'active',
             'init_date',
             'executed_first_time',
-            'execute_first_immediately',
             'account',
             'category',
             'subcategory'
