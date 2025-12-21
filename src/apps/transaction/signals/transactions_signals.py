@@ -6,10 +6,10 @@ from apps.transaction.models import TransactionModel
 
 @receiver(post_delete, sender=TransactionModel)
 def update_balance_post_delete_transaction(sender, instance, **kwargs):
-    # TODO: verificar se a lógica está coorreta
+    # TODO: implementar type TRANSFERENCIA quando criado
     if instance.type_transaction == 'RECEITA':
         instance.account.balance -= instance.value
-    else:
+    elif instance.type_transaction == 'DESPESA':
         instance.account.balance += instance.value
     
     instance.account.save()
