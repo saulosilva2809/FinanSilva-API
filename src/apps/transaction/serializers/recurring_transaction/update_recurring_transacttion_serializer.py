@@ -3,10 +3,10 @@ from rest_framework import serializers
 from apps.transaction.models import RecurringTransactionModel
 
 
-class CreateUpdateRecurringTransactionSerializer(serializers.ModelSerializer):
+class UpdatRecurringTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecurringTransactionModel
-        fields = ('id', 'account', 'value', 'type_transaction', 'description', 'frequency', 'active', 'category', 'subcategory', 'init_date')
+        fields = ('account', 'value', 'description', 'frequency', 'active', 'category', 'subcategory')
 
     def validate_value(self, value):
         if value < 0:
