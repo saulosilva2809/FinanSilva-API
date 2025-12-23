@@ -3,7 +3,7 @@ from rest_framework import serializers
 from apps.transaction.models import TransactionModel
 
 
-class CreateTransactionSerializer(serializers.ModelSerializer):
+class CreateUpdateTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionModel
         fields = ('id', 'account', 'type_transaction', 'value', 'description', 'category', 'subcategory')

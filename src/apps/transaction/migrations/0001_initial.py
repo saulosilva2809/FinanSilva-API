@@ -3,7 +3,9 @@
 import apps.transaction.models.recurring_transaction_model
 import django.db.models.deletion
 import uuid
+
 from django.db import migrations, models
+from django.utils.timezone import now
 
 
 class Migration(migrations.Migration):
@@ -30,7 +32,7 @@ class Migration(migrations.Migration):
                 ('frequency', models.CharField(choices=[('DAILY', 'Diária'), ('WEEKLY', 'Semanal'), ('BIWEEKLY', 'Quinzenal'), ('MONTHLY', 'Mensal'), ('BIMONTHLY', 'Bimestral'), ('QUARTERLY', 'Trimestral'), ('SEMIANNUAL', 'Semestral'), ('ANNUAL', 'Anual')], max_length=50)),
                 ('next_run_date', models.DateTimeField()),
                 ('active', models.BooleanField(default=True)),
-                ('init_date', models.DateTimeField(default=apps.transaction.models.recurring_transaction_model.default_datetime)),
+                ('init_date', models.DateTimeField(default=now())),
                 ('executed_first_time', models.BooleanField(default=False)),
                 ('execute_first_immediately', models.BooleanField(default=False)),
                 ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recurring_transactions', to='account.accountmodel')),
