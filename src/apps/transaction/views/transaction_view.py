@@ -4,10 +4,9 @@ from rest_framework import generics, permissions
 from apps.transaction.filters import TransactionFilter
 from apps.transaction.models import TransactionModel
 from apps.transaction.serializers import (
-    CreateTransactionSerializer,
+    CreateUpdateTransactionSerializer,
     DetailTransactionSerializer,
     ListTransactionSerializer,
-    UpdateTransactionSerializer
 )
 from apps.transaction.services import TransactionService
 
@@ -22,7 +21,7 @@ class TransactionListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
-            return CreateTransactionSerializer
+            return CreateUpdateTransactionSerializer
         return ListTransactionSerializer
     
     def perform_create(self, serializer):
@@ -39,7 +38,7 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
-            return UpdateTransactionSerializer
+            return CreateUpdateTransactionSerializer
         return DetailTransactionSerializer
     
     def perform_update(self, serializer):
