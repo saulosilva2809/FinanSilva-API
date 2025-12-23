@@ -1,30 +1,20 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
+from apps.base.filters import DashboardFilter
 from apps.base.services import DashboardMetrics
 from apps.account.models import AccountModel
 
 
 class DashboardView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = DashboardFilter
 
-    # TODO: refatorar para usar django-filter
     def get_queryset(self, request):
         queryset = AccountModel.objects.filter(user=self.request.user)
-        params = self.request.query_params
-
-        name = params.get('account_name')
-        bank = params.get('account_bank')
-        type_account = params.get('type_account')
-
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-
-        if bank:
-            queryset = queryset.filter(bank=bank)
-
-        if type_account:
-            queryset = queryset.filter(type_account=type_account)
+        queryset = self.filter_queryset(queryset)
 
         return queryset
 
