@@ -1,5 +1,7 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
 
+from apps.account.filters import AccountFilter
 from apps.account.models import AccountModel
 from apps.account.serializers import (
     CreateAccountSerializer,
@@ -12,26 +14,11 @@ from apps.base.pagination import PaginationAPI
 class AccountListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = PaginationAPI
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = AccountFilter
 
     def get_queryset(self):
-        queryset = AccountModel.objects.filter(user=self.request.user)
-        params = self.request.query_params
-
-        # TODO: refatorar para usar django-filter
-        name = params.get('name')
-        bank = params.get('bank')
-        type_account = params.get('type_account')
-
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-
-        if bank:
-            queryset = queryset.filter(bank=bank)
-
-        if type_account:
-            queryset = queryset.filter(type_account=type_account)
-
-        return queryset
+        return AccountModel.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
