@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions
 
+from apps.base.pagination import PaginationAPI
 from apps.transaction.models import RecurringTransactionModel
 from apps.transaction.serializers import (
     CreateUpdateRecurringTransactionSerializer,
@@ -11,6 +12,7 @@ from apps.transaction.services import TransactionService
 
 class RecurringTransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = PaginationAPI
 
     # TODO: implementar filters com django-filter
     def get_queryset(self):

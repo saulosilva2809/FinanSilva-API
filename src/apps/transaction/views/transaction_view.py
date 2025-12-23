@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
 
+from apps.base.pagination import PaginationAPI
 from apps.transaction.filters import TransactionFilter
 from apps.transaction.models import TransactionModel
 from apps.transaction.serializers import (
@@ -13,6 +14,7 @@ from apps.transaction.services import TransactionService
 
 class TransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = PaginationAPI
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 
