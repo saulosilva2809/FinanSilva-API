@@ -1,19 +1,19 @@
 from rest_framework import serializers
 
 from apps.base.serializer import BaseMiniSerializer
-from apps.category.models import CategoryModel
+from apps.category.models import SubCategoryModel
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    account = BaseMiniSerializer(read_only=True)
-    
+class DetailSubCategorySerializer(serializers.ModelSerializer):
+    category = BaseMiniSerializer(read_only=True)
+
     class Meta:
-        model = CategoryModel
+        model = SubCategoryModel
         fields = [
             'id',
             'name',
             'description',
             'created_at',
             'updated_at',
-            'account',
+            'category',
         ]

@@ -1,6 +1,7 @@
-from .category.category_serializer import CategorySerializer
+from .category.detail_category_serializer import DetailCategorySerializer
 from .category.create_update_category_serializer import CreateUpdateCategorySerializer
 from .category.list_category_serializer import ListCategorySerializer
 
-from .subcategory.subcategory_serializer import SubCategorySerializer
+from .subcategory.create_update_subcategory_serializer import CreateUpdateSubCategorySerializer
+from .subcategory.detail_subcategory_serializer import DetailSubCategorySerializer
 from .subcategory.list_subcategory_serializer import ListSubCategorySerializer
