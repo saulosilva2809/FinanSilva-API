@@ -10,7 +10,7 @@ class TransactionFilter(django_filters.FilterSet):
     higher_value = django_filters.NumberFilter(field_name='value', lookup_expr='gte')
     lower_value = django_filters.NumberFilter(field_name='value', lookup_expr='lte')
 
-    category_id = django_filters.CharFilter(field_name='category__id')
+    category_id = django_filters.UUIDFilter(field_name='category__id')
     category_name = django_filters.CharFilter(field_name='category__name', lookup_expr='icontains')
 
     subcategory_id = django_filters.UUIDFilter(field_name='subcategory__id')
