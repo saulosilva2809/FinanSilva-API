@@ -1,11 +1,15 @@
 from rest_framework import serializers
 
 from apps.base.serializer import BaseMiniSerializer
-from apps.transaction.models import RecurringTransactionModel
+from apps.transaction.models import TransferModel
 
 
-class DetailRecurringTransactionSerializer(serializers.ModelSerializer):
-    account = BaseMiniSerializer({
+class DetailTransferSerializer(serializers.ModelSerializer):
+    original_account = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "name": serializers.CharField()
+    })
+    account_transferred = BaseMiniSerializer({
         "id": serializers.UUIDField(),
         "name": serializers.CharField()
     })
@@ -17,20 +21,16 @@ class DetailRecurringTransactionSerializer(serializers.ModelSerializer):
         "id": serializers.UUIDField(),
         "name": serializers.CharField()
     })
-
+    
     class Meta:
-        model = RecurringTransactionModel
+        model = TransferModel
         fields = [
             'id',
+            'created_at',
+            'updated_at',
             'value',
-            'type_transaction',
-            'description',
-            'frequency',
-            'next_run_date',
-            'active',
-            'init_date',
-            'executed_first_time',
-            'account',
+            'original_account',
+            'account_transferred',
             'category',
-            'subcategory'
+            'subcategory',
         ]

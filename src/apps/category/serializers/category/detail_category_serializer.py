@@ -5,7 +5,10 @@ from apps.category.models import CategoryModel
 
 
 class DetailCategorySerializer(serializers.ModelSerializer):
-    account = BaseMiniSerializer(read_only=True)
+    account = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "name": serializers.CharField()
+    })
     
     class Meta:
         model = CategoryModel

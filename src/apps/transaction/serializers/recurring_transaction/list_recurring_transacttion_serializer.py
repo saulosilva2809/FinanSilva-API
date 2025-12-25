@@ -5,9 +5,18 @@ from apps.transaction.models import RecurringTransactionModel
 
 
 class ListRecurringTransactionSerializer(serializers.ModelSerializer):
-    account = BaseMiniSerializer()
-    category = BaseMiniSerializer()
-    subcategory = BaseMiniSerializer()
+    account = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "name": serializers.CharField()
+    })
+    category = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "name": serializers.CharField()
+    })
+    subcategory = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "name": serializers.CharField()
+    })
 
     class Meta:
         model = RecurringTransactionModel

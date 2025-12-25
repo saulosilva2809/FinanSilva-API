@@ -5,8 +5,11 @@ from apps.category.models import SubCategoryModel
 
 
 class DetailSubCategorySerializer(serializers.ModelSerializer):
-    category = BaseMiniSerializer(read_only=True)
-
+    category = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "name": serializers.CharField()
+    })
+    
     class Meta:
         model = SubCategoryModel
         fields = [
