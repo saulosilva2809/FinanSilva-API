@@ -224,6 +224,30 @@ class DashboardMetrics():
             for ts in rec_transactions
         ]
     
+    def recent_transfers(self):
+        transfers = self.transactions.filter(transfer_root__isnull=False).order_by('-created_at')
+
+        return [
+            {
+                'id': transfer.id,
+                'value': float(transfer.value),
+                'type_transaction': transfer.type_transaction,
+                'account': {
+                    'id': transfer.account.id,
+                    'name': transfer.account.name,
+                },
+                'category': {
+                    'id': transfer.category.id,
+                    'name': transfer.category.name,
+                } if transfer.category else None,
+                'subcategory': {
+                    'id': transfer.subcategory.id,
+                    'name': transfer.subcategory.name,
+                } if transfer.subcategory else None,
+            }
+            for transfer in transfers
+        ]
+    
     def set_response(self):
         response = {
             'total_global_values': self.total_global_values(),
@@ -231,6 +255,7 @@ class DashboardMetrics():
             'monthly_summary': self.get_monthly_summary(),
             'recents_transactions': self.recent_transactions(),
             'upcoming_transactions': self.upcoming_transactions(),
+            'recent_transfers': self.recent_transfers(),
         }
 
         if self._has_filters():
