@@ -2,10 +2,9 @@ from datetime import timedelta
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
-from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from apps.account.models.choices import TypeAccountChoices
-from apps.transaction.models import TransactionModel, RecurringTransactionModel
+from apps.transaction.models import RecurringTransactionModel, TransactionModel, TransferModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
 
@@ -35,6 +34,7 @@ class DashboardMetrics():
 
     def _filter_transactions(self):
         filters = {"account__in": self.queryset}
+        filters['transfer_root__isnull'] = True
 
         if self.start_date:
             filters["created_at__gte"] = self.start_date
@@ -48,7 +48,9 @@ class DashboardMetrics():
         if self.subcategory:
             filters['subcategory'] = self.subcategory
 
-        return TransactionModel.objects.filter(**filters)
+        return TransactionModel.objects.select_related(
+            'account', 'category', 'subcategory'
+        ).filter(**filters)
 
     def total_filtered_values(self):
         total_recipe = (
@@ -225,17 +227,24 @@ class DashboardMetrics():
         ]
     
     def recent_transfers(self):
-        transfers = self.transactions.filter(transfer_root__isnull=False).order_by('-created_at')
+        transfers = TransferModel.objects.select_related(
+            'original_account', 'account_transferred', 'category', 'subcategory'
+        ).filter(original_account__in=self.queryset)
 
         return [
             {
                 'id': transfer.id,
                 'value': float(transfer.value),
-                'type_transaction': transfer.type_transaction,
-                'account': {
-                    'id': transfer.account.id,
-                    'name': transfer.account.name,
+                'original_account': {
+                    'id': transfer.original_account.id,
+                    'name': transfer.original_account.name,
                 },
+                'account_transferred': {
+                    'id': transfer.account_transferred.id,
+                    'name': transfer.account_transferred.name,
+                },
+                'value': transfer.value,
+                'created_at': transfer.created_at,
                 'category': {
                     'id': transfer.category.id,
                     'name': transfer.category.name,
