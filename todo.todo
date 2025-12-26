@@ -1,5 +1,6 @@
 # TODO: toda recurring_transaction deve ser descontada ás 00:01 do dia
-# TODO: retirar lógica de adiciona/remover saldo do save
 # TODO: módulo de transaferencias entre contas
 # TODO: implementar módulo de cartão de crédito
 # TODO: verificar se ao modificar uma recurring transaction no intervalo de tempo a próxima já virá editada
+# TODO: criar filtros para as recurring_transaction
+# TODO: refatorar todos os serializer que usam BaseMiniSerializer
