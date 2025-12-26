@@ -216,6 +216,10 @@ class DashboardMetrics():
                     'id': ts.category.id,
                     'name': ts.category.name,
                 } if ts.category else None,
+                'subcategory': {
+                    'id': ts.subcategory.id,
+                    'name': ts.subcategory.name,
+                } if ts.subcategory else None,
             }
             for ts in rec_transactions
         ]
