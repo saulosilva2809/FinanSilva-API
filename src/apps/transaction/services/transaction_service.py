@@ -1,16 +1,18 @@
 import uuid
 
 from django.db import IntegrityError, transaction
+from rest_framework.exceptions import PermissionDenied
 
 from apps.account.models import AccountModel
-from apps.transaction.models import RecurringTransactionModel, TransactionModel
+from apps.transaction.models import RecurringTransactionModel, TransactionModel, TransferModel
+from apps.transaction.models.choices import TypeTransactionChoices
 
 
 class TransactionService:
 
     @staticmethod
     @transaction.atomic
-    def create_transaction(instance: TransactionModel):
+    def update_balance_accounts(instance: TransactionModel):
         try:
             account = (
                 AccountModel.objects
@@ -51,7 +53,7 @@ class TransactionService:
                 return
 
             # cria a transação real
-            tx = TransactionModel.objects.create(
+            transaction = TransactionModel.objects.create(
                 account=account,
                 value=instance.value,
                 type_transaction=instance.type_transaction,
@@ -63,10 +65,10 @@ class TransactionService:
             )
 
             # aplica saldo
-            if tx.type_transaction == 'RECEITA':
-                account.balance += tx.value
+            if transaction.type_transaction == 'RECEITA':
+                account.balance += transaction.value
             else:
-                account.balance -= tx.value
+                account.balance -= transaction.value
             account.save()
 
             # marca a recorrente como processada na primeira execução
@@ -74,11 +76,58 @@ class TransactionService:
             instance.executed_first_time = True
             instance.save(update_fields=["processed", "executed_first_time"])
 
-            return tx
+            return transaction
 
         except IntegrityError:
             # idempotency_key repetida → retorna a transação já criada
-            return TransactionModel.objects.get(idempotency_key=tx.idempotency_key)
+            return TransactionModel.objects.get(idempotency_key=transaction.idempotency_key)
+
+    @staticmethod
+    @transaction.atomic
+    def create_transaction_from_transfer(request, instance: TransferModel):
+        try:
+            # bloqueia a conta
+            original_account = AccountModel.objects.select_for_update().get(id=instance.original_account.id)
+            account_transferred = AccountModel.objects.select_for_update().get(id=instance.account_transferred.id)
+
+            if account_transferred.user != request.user:
+                raise PermissionDenied("Você não tem permissão para transferir a essa conta.")
+
+            if instance.processed:
+                return
+            
+            # setar try/except
+            # primeira transação (da conta que enviou o dinheiro)
+            first_transaction = TransactionModel.objects.create(
+                account=original_account,
+                value=instance.value,
+                type_transaction=TypeTransactionChoices.EXPENSE,
+                description=instance.description,
+                category=instance.category,
+                subcategory=instance.subcategory,
+                transfer_root=instance,
+            )
+            
+            # segunda transação (da conta que recebeu o dinheiro)
+            second_transaction = TransactionModel.objects.create(
+                account=account_transferred,
+                value=instance.value,
+                type_transaction=TypeTransactionChoices.RECIPE,
+                description=instance.description,
+                category=instance.category,
+                subcategory=instance.subcategory,
+                transfer_root=instance,
+            )
+
+            TransactionService.update_balance_accounts(first_transaction)
+            TransactionService.update_balance_accounts(second_transaction)
+
+            instance.processed = True
+            instance.save(update_fields=['processed'])
+
+        except IntegrityError:
+            # idempotency_key repetida → retorna a transação já criada
+            return TransferModel.objects.get(idempotency_key=instance.idempotency_key)
 
     @staticmethod
     @transaction.atomic
