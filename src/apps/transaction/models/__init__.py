@@ -1,2 +1,3 @@
 from .recurring_transaction_model import RecurringTransactionModel
 from .transaction_model import TransactionModel
+from .transfer_model import TransferModel

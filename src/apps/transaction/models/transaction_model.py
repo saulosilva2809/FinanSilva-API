@@ -41,6 +41,13 @@ class TransactionModel(BaseModel):
         on_delete=models.SET_NULL,
         related_name='generated_transactions'
     )
+    transfer_root = models.ForeignKey(
+        'transaction.TransferModel',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='generated_transactions'
+    )
 
     class Meta:
         verbose_name = "Transação"
