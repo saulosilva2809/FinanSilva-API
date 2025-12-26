@@ -28,7 +28,7 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         instance = serializer.save()
-        TransactionService.create_transaction(instance)
+        TransactionService.update_balance_accounts(instance)
 
 
 class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -51,4 +51,3 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
             old_instance=old_instance,
             new_instance=new_instance
         )
-
