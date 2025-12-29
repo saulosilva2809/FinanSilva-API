@@ -1,11 +1,29 @@
-version: "3.9"
-
 services:
+  db:
+    image: postgres:17-alpine
+    container_name: finansilva_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-finansilva}
+      POSTGRES_USER: ${POSTGRES_USER:-finansilva}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finansilva123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finansilva} -d ${POSTGRES_DB:-finansilva}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     container_name: finansilva_web
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -23,7 +41,10 @@ services:
     build: .
     container_name: finansilva_celery
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -39,7 +60,10 @@ services:
     build: .
     container_name: finansilva_celery_beat
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -55,7 +79,10 @@ services:
     build: .
     container_name: finansilva_flower
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -77,3 +104,6 @@ services:
 networks:
   default:
     name: finansilva_net
+
+volumes:
+  postgres_data:
