@@ -1,22 +1,21 @@
 FROM python:3.12-slim
 
-# Evita criação de .pyc e habilita logs não bufferizados
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Dependências básicas para build de pacotes Python que exigem compilação
+# Dependências de sistema (Pillow, psycopg2, etc)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala dependências do projeto
-# Observação: mantenha um requirements.txt no diretório raiz do projeto
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o código (o docker-compose irá montar volumes em ambiente de desenvolvimento)
+# Entrypoints separados
+COPY entrypoint.migrate.sh /entrypoint.migrate.sh
+COPY entrypoint.no-migrate.sh /entrypoint.no-migrate.sh
+RUN chmod +x /entrypoint.migrate.sh /entrypoint.no-migrate.sh
+
 COPY src /app/src
-
-# O comando/entrypoint será definido por serviço no docker-compose
