@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
@@ -146,6 +146,17 @@ class DashboardMetrics():
             .order_by("month")
         )
 
+        transfers_qs = (
+            TransferModel.objects.filter(
+                Q(original_account__in=self.queryset) |
+                Q(account_transferred__in=self.queryset)
+            )
+            .annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(total=Sum("value"))
+            .order_by("month")
+        )
+
         recipes_by_month = {
             item["month"].strftime("%Y-%m"): item["total"] or 0
             for item in recipes_qs
@@ -154,16 +165,22 @@ class DashboardMetrics():
             item["month"].strftime("%Y-%m"): item["total"] or 0
             for item in expenses_qs
         }
-        months = set(recipes_by_month) | set(expenses_by_month)
+        transfers_by_month = {
+            item["month"].strftime("%Y-%m"): item["total"] or 0
+            for item in transfers_qs
+        }
+        months = set(recipes_by_month) | set(expenses_by_month) | set(transfers_by_month)
         
         summary = {}
         for month in months:
             recipes = recipes_by_month.get(month, 0)
             expenses = expenses_by_month.get(month, 0)
+            transfers = transfers_by_month.get(month, 0)
 
             summary[month] = {
                 'recipes': recipes,
                 'expenses': expenses,
+                'transfers': transfers,
                 'balance': recipes - expenses
             }
 
@@ -190,6 +207,10 @@ class DashboardMetrics():
                     "id": ts.category.id,
                     "name": ts.category.name,
                 } if ts.category else None,
+                "subcategory": {
+                    "id": ts.subcategory.id,
+                    "name": ts.subcategory.name,
+                } if ts.subcategory else None,
             }
             for ts in transactions
         ]
