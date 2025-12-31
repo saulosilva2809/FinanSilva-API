@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from rest_framework.response import Response
 
 from apps.base.pagination import PaginationAPI
 from apps.transaction.models import RecurringTransactionModel
@@ -7,7 +8,6 @@ from apps.transaction.serializers import (
     DetailRecurringTransactionSerializer,
     ListRecurringTransactionSerializer,
 )
-from apps.transaction.services import TransactionService
 
 
 class RecurringTransactionListCreateView(generics.ListCreateAPIView):
@@ -35,3 +35,14 @@ class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestr
         if self.request.method in ['PUT', 'PATCH']:
             return CreateUpdateRecurringTransactionSerializer
         return DetailRecurringTransactionSerializer
+
+
+class ApproveRecurringTransactionView(generics.GenericAPIView):
+    def get_queryset(self):
+        return RecurringTransactionModel.objects.filter(account__in=self.request.user.accounts.all())
+    
+    def post(self):
+        rec_id = self.kwargs['id']
+
+        return Response({'id': rec_id})
+        
