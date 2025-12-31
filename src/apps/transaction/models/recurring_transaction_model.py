@@ -23,7 +23,7 @@ class RecurringTransactionModel(BaseModel):
     type_transaction = models.CharField(choices=TypeTransactionChoices.choices, default='')
     description = models.CharField(max_length=255)
     frequency = models.CharField(choices=NextRunDateChoices, max_length=50)
-    next_run_date = models.DateTimeField()
+    next_run_date = models.DateTimeField(null=True, blank=True)
     active = models.BooleanField(default=True)
     category = models.ForeignKey(CategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
     subcategory = models.ForeignKey(SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
@@ -57,15 +57,12 @@ class RecurringTransactionModel(BaseModel):
             next_date = make_aware(next_date)
 
         return next_date
-
+    
     def save(self, *args, **kwargs):
-        if not self.next_run_date:
-            self.next_run_date = self.set_next_run_date()
-
-        if is_naive(self.next_run_date):
-            self.next_run_date = make_aware(self.next_run_date)
-
-        super().save(*args, **kwargs)
+        if not self.init_date:
+            self.init_date = now()
+    
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Transação Recorrente"

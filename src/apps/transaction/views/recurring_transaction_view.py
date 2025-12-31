@@ -22,11 +22,6 @@ class RecurringTransactionListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return CreateUpdateRecurringTransactionSerializer
         return ListRecurringTransactionSerializer
-    
-    def perform_create(self, serializer):
-        instance = serializer.save()
-
-        TransactionService.create_transaction_from_recurring_transaction(instance)
 
 
 class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

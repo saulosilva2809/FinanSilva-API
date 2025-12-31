@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.db import IntegrityError, transaction
@@ -7,6 +8,7 @@ from apps.account.models import AccountModel
 from apps.transaction.models import RecurringTransactionModel, TransactionModel, TransferModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
+logger = logging.getLogger(__name__)
 
 class TransactionService:
 
@@ -45,6 +47,8 @@ class TransactionService:
     @transaction.atomic
     def create_transaction_from_recurring_transaction(instance: RecurringTransactionModel):
         try:
+            logger.info('TRANSACTION SERVICE: Criando Transaction com base em Recurring Transaction')
+    
             # bloqueia a conta
             account = AccountModel.objects.select_for_update().get(id=instance.account_id)
 
@@ -60,6 +64,7 @@ class TransactionService:
                 description=instance.description,
                 category=instance.category,
                 subcategory=instance.subcategory,
+                recurring_root=instance,
                 idempotency_key=uuid.uuid4(),
                 processed=True
             )

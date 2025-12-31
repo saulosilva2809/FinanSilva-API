@@ -4,7 +4,8 @@ import logging
 from celery import shared_task
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from apps.transaction.models import RecurringTransactionModel, TransactionModel
+from apps.transaction.models import RecurringTransactionModel
+from apps.transaction.services import TransactionService
 
 
 logger = logging.getLogger(__name__)
@@ -14,21 +15,7 @@ def process_recurring_transaction(self, recurring_id):
     try:
         rec = RecurringTransactionModel.objects.get(id=recurring_id)
 
-        logger.info('Criando Transaction com base em Recurring Transaction')
-
-        TransactionModel.objects.create(
-            account=rec.account,
-            type_transaction=rec.type_transaction,
-            value=rec.value,
-            description=rec.description,
-            category=rec.category,
-            subcategory=rec.subcategory,
-            recurring_root=rec,
-        )
-
-        # marca primeira execução
-        if not rec.executed_first_time:
-            rec.executed_first_time = True
+        TransactionService.create_transaction_from_recurring_transaction(rec)
 
         # calcula próxima data
         next_date = rec.set_next_run_date()
