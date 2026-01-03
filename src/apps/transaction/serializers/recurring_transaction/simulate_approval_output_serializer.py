@@ -5,7 +5,7 @@ from apps.base.serializer import BaseMiniSerializer
 from apps.transaction.models import RecurringTransactionModel
 
 
-class RecurringTransactionSummarySerializer(serializers.ModelSerializer):
+class SimulateApprovalOutputSerializer(serializers.ModelSerializer):
     account = BaseMiniSerializer({
         "id": serializers.UUIDField(),
         "name": serializers.CharField()

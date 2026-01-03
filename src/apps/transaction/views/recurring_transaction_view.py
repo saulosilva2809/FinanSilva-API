@@ -10,8 +10,8 @@ from apps.transaction.serializers import (
     CreateUpdateRecurringTransactionSerializer,
     DetailRecurringTransactionSerializer,
     ListRecurringTransactionSerializer,
-    RecurringTransactionSummarySerializer,
     SimulateApprovalInputSerializer,
+    SimulateApprovalOutputSerializer,
 )
 
 
@@ -44,7 +44,7 @@ class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestr
 
 class SimulateApprovalRecurringTransaction(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = RecurringTransactionSummarySerializer
+    serializer_class = SimulateApprovalOutputSerializer
     
     def get_queryset(self):
         return RecurringTransactionModel.objects.filter(
@@ -65,7 +65,7 @@ class SimulateApprovalRecurringTransaction(generics.GenericAPIView):
 
         return Response(output_serializer.data)
 
-class ApproveRecurringTransactionView(generics.GenericAPIView):
+class ApproveAdvanceRecurringTransactionView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'pk'
 

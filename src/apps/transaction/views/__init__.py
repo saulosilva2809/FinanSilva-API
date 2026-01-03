@@ -1,5 +1,5 @@
 from .recurring_transaction_view import (
-    ApproveRecurringTransactionView,
+    ApproveAdvanceRecurringTransactionView,
     RecurringTransactionListCreateView,
     RecurringTransactionRetrieveUpdateDestroyView,
     SimulateApprovalRecurringTransaction,
