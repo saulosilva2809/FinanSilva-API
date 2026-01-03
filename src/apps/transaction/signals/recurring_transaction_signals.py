@@ -13,6 +13,9 @@ def create_task_celery_to_recurring_transaction(sender, instance: RecurringTrans
     if created and instance.active:
         run_date = instance.init_date
 
+        instance.next_run_date = instance.set_next_run_date()
+        instance.save(update_fields=['next_run_date'])
+
         clocked = ClockedSchedule.objects.create(
             clocked_time=run_date
         )
