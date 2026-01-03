@@ -9,7 +9,7 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(RecurringTransactionModel)
 class RecurringTransactionAdmin(admin.ModelAdmin):
-    list_display = ('account', 'value', 'type_transaction', 'init_date', 'next_run_date', 'active')
+    list_display = ('account', 'value', 'type_transaction', 'init_date', 'next_run_date', 'active', 'executed_first_time', 'executed_last_time', 'updated_at')
 
 @admin.register(TransferModel)
 class TransferAdmin(admin.ModelAdmin):
