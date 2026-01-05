@@ -1,3 +1,5 @@
+import sys
+
 from datetime import timedelta
 from decouple import config, Csv
 from pathlib import Path
@@ -167,47 +169,47 @@ SIMPLE_JWT = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-
     "formatters": {
         "dev": {
+            # Formato profissional: [NÍVEL] Nome.do.Modulo: Mensagem
             "format": "[%(levelname)s] %(name)s: %(message)s",
         },
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
     },
-
     "handlers": {
         "console": {
+            "level": "DEBUG",
             "class": "logging.StreamHandler",
+            "stream": sys.stdout,
             "formatter": "dev",
         },
     },
-
     "loggers": {
-        # Logs padrão do Django
+        # ROOT LOGGER: Captura TUDO que não tiver um logger específico
+        "": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        # Logs do Django (INFO para ver as requisições no terminal)
         "django": {
             "handlers": ["console"],
             "level": "INFO",
-            "propagate": True,
-        },
-
-        # Requests com erro
-        "django.request": {
-            "handlers": ["console"],
-            "level": "ERROR",
             "propagate": False,
         },
-
-        # Seus apps
+        # Logs do seu projeto (DEBUG para ver tudo enquanto desenvolve)
         "apps": {
             "handlers": ["console"],
             "level": "DEBUG",
-            "propagate": True,
+            "propagate": False,
         },
-
-        # Celery
-        "celery": {
+        # Evita logs excessivos de bibliotecas como o PIL ou requests
+        "urllib3": {
             "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
+            "level": "WARNING",
+            "propagate": False,
         },
     },
 }

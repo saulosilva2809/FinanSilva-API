@@ -13,13 +13,13 @@ class DashboardView(generics.GenericAPIView):
     filterset_class = DashboardFilter
 
     def get_queryset(self, request):
-        queryset = AccountModel.objects.filter(user=self.request.user)
-        queryset = self.filter_queryset(queryset)
-
-        return queryset
+        return AccountModel.objects.filter(user=self.request.user)
 
     def get(self, request):
+        queryset_base = self.get_queryset(self.request)
+        filtered_accounts = self.filter_queryset(queryset_base)
         params = self.request.query_params
+
         category = params.get('category')
         subcategory = params.get('subcategory')
         start_date = params.get('start_date')
@@ -27,11 +27,13 @@ class DashboardView(generics.GenericAPIView):
 
         service = DashboardMetrics(
             request=self.request,
-            queryset=self.get_queryset(self.request),
+            queryset=filtered_accounts,
             category=category,
             subcategory=subcategory,
             start_date=start_date,
             end_date=end_date,
         )
 
-        return Response(service.set_response())
+        response_data = service.get_cached_dashboard()
+
+        return Response(response_data)

@@ -1,4 +1,8 @@
+import hashlib
+import logging
+
 from datetime import timedelta
+from django.core.cache import cache
 from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
@@ -8,6 +12,8 @@ from apps.transaction.models import RecurringTransactionModel, TransactionModel,
 from apps.transaction.models.choices import TypeTransactionChoices
 
 
+logger = logging.getLogger(__name__)
+
 class DashboardMetrics():
     def __init__(
             self, request, queryset,
@@ -16,6 +22,7 @@ class DashboardMetrics():
         ):
         self.request = request
         self.queryset = queryset
+        self.account_ids = list(queryset.values_list('id', flat=True))
         self.one_year_ago = timezone.now() - timedelta(days=365)
         self.category = category
         self.subcategory = subcategory
@@ -33,7 +40,7 @@ class DashboardMetrics():
 
 
     def _filter_transactions(self):
-        filters = {"account__in": self.queryset}
+        filters = {"account_id__in": self.account_ids}
         filters['transfer_root__isnull'] = True
 
         if self.start_date:
@@ -74,82 +81,68 @@ class DashboardMetrics():
         }
     
     def total_global_values(self):
-        total_balance = self.queryset.aggregate(total=Sum("balance"))["total"] or 0
+        from apps.account.models import AccountModel
 
-        total_saved = self.queryset.filter(
-            type_account__in=[
+        stats = AccountModel.objects.filter(id__in=self.account_ids).aggregate(
+            total_balance=Sum("balance"),
+            total_saved=Sum("balance", filter=Q(type_account__in=[
                 TypeAccountChoices.INVESTMENT, 
                 TypeAccountChoices.SAVINGS
-            ]
-        ).aggregate(total=Sum("balance"))["total"] or 0
+            ]))
+        )
 
         return {
-            'total_balance': total_balance,
-            'total_saved': total_saved,
+            'total_balance': stats['total_balance'] or 0,
+            'total_saved': stats['total_saved'] or 0,
         }
 
     def values_by_category(self):
-        recipes_qs = (
-            self.transactions.filter(
-                type_transaction=TypeTransactionChoices.RECIPE
+        categories_qs = (
+            self.transactions
+            .values("category__id", "category__name")
+            .annotate(
+                income=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
+                expense=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
             )
-            .exclude(category__isnull=True)
-            .values("category__name", 'category__id')
-            .annotate(total=Sum("value"))
         )
 
-        expenses_qs = (
-            self.transactions.filter(
-                type_transaction=TypeTransactionChoices.EXPENSE
-            )
-            .exclude(category__isnull=True)
-            .values("category__name", 'category__id')
-            .annotate(total=Sum("value"))
-        )
+        income_list = []
+        expense_list = []
+
+        for item in categories_qs:
+            if item["income"] and item["income"] > 0:
+                income_list.append({
+                    'category': {'id': item["category__id"], 'name': item["category__name"]},
+                    'value': item["income"]
+                })
+
+            if item["expense"] and item["expense"] > 0:
+                expense_list.append({
+                    'category': {'id': item["category__id"], 'name': item["category__name"]},
+                    'value': item["expense"]
+                })
 
         return {
-            "income_by_category": [{
-                'category': {
-                    'name': item["category__name"],
-                    'id': item["category__id"],
-                }, 
-                'value': item["total"] or 0}
-                for item in recipes_qs
-            ],
-            "expenses_by_category": [{
-                'category': {
-                    'name': item["category__name"],
-                    'id': item["category__id"],
-                },
-                'value': item["total"] or 0}
-                for item in expenses_qs
-            ]}
+            "income_by_category": income_list,
+            "expenses_by_category": expense_list
+        }
 
     def get_monthly_summary(self):
-        recipes_qs = (
-            self.transactions.filter(
-                type_transaction=TypeTransactionChoices.RECIPE,
-            )
+        summary_qs = (
+            self.transactions
             .annotate(month=TruncMonth("created_at"))
             .values("month")
-            .annotate(total=Sum("value"))
-            .order_by("month")
-        )
-
-        expenses_qs = (
-            self.transactions.filter(
-                type_transaction=TypeTransactionChoices.EXPENSE,
+            .annotate(
+                total_recipes=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
+                total_expenses=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
             )
-            .annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(total=Sum("value"))
             .order_by("month")
         )
 
         transfers_qs = (
             TransferModel.objects.filter(
-                Q(original_account__in=self.queryset) |
-                Q(account_transferred__in=self.queryset)
+                Q(original_account_id__in=self.account_ids) |
+                Q(account_transferred_id__in=self.account_ids)
             )
             .annotate(month=TruncMonth("created_at"))
             .values("month")
@@ -157,32 +150,29 @@ class DashboardMetrics():
             .order_by("month")
         )
 
-        recipes_by_month = {
-            item["month"].strftime("%Y-%m"): item["total"] or 0
-            for item in recipes_qs
-        }
-        expenses_by_month = {
-            item["month"].strftime("%Y-%m"): item["total"] or 0
-            for item in expenses_qs
-        }
-        transfers_by_month = {
-            item["month"].strftime("%Y-%m"): item["total"] or 0
-            for item in transfers_qs
-        }
-        months = set(recipes_by_month) | set(expenses_by_month) | set(transfers_by_month)
-        
         summary = {}
-        for month in months:
-            recipes = recipes_by_month.get(month, 0)
-            expenses = expenses_by_month.get(month, 0)
-            transfers = transfers_by_month.get(month, 0)
-
-            summary[month] = {
+        
+        for item in summary_qs:
+            month_str = item["month"].strftime("%Y-%m")
+            recipes = item["total_recipes"] or 0
+            expenses = item["total_expenses"] or 0
+            summary[month_str] = {
                 'recipes': recipes,
                 'expenses': expenses,
-                'transfers': transfers,
+                'transfers': 0,
                 'balance': recipes - expenses
             }
+
+        for item in transfers_qs:
+            month_str = item["month"].strftime("%Y-%m")
+            total_transfer = item["total"] or 0
+            if month_str in summary:
+                summary[month_str]['transfers'] = total_transfer
+            else:
+                summary[month_str] = {
+                    'recipes': 0, 'expenses': 0, 
+                    'transfers': total_transfer, 'balance': 0
+                }
 
         return summary
     
@@ -218,7 +208,7 @@ class DashboardMetrics():
     
     def upcoming_transactions(self):
         rec_transactions = RecurringTransactionModel.objects.filter(
-            active=True
+            account_id__in=self.account_ids, active=True
         ).select_related(
             'account', 'category'
         ).order_by('next_run_date')[:5]
@@ -250,7 +240,7 @@ class DashboardMetrics():
     def recent_transfers(self):
         transfers = TransferModel.objects.select_related(
             'original_account', 'account_transferred', 'category', 'subcategory'
-        ).filter(original_account__in=self.queryset)
+        ).filter(original_account_id__in=self.account_ids)
 
         return [
             {
@@ -278,6 +268,7 @@ class DashboardMetrics():
             for transfer in transfers
         ]
     
+            
     def set_response(self):
         response = {
             'total_global_values': self.total_global_values(),
@@ -292,3 +283,25 @@ class DashboardMetrics():
             response['total_filtered_values'] = self.total_filtered_values()
 
         return response
+
+    def get_cached_dashboard(self):
+        # 1. Pegamos a Query String bruta da URL (ex: "account_name=oi&category=1")
+        # Isso garante que QUALQUER mudança no filtro mude a chave
+        query_params = self.request.GET.urlencode()
+
+        # 2. Criamos um hash curto para a chave não ficar gigante e dar erro
+        query_hash = hashlib.md5(query_params.encode()).hexdigest()
+
+        # 3. Geramos a chave única por usuário e por combinação de filtros
+        cache_key = f"user_dashboard_{self.request.user.id}_{query_hash}"
+        
+        data = cache.get(cache_key)
+        
+        if not data:
+            data = self.set_response()
+            cache.set(cache_key, data, 3600)
+            logger.info(f"Pegando dados via BD (Filtros: {query_params})")
+        else:
+            logger.info("Pegando dados via CACHE")
+                
+        return data
