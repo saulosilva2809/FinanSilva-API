@@ -1,10 +1,12 @@
 from django.db import transaction
+from django_filters.rest_framework import DjangoFilterBackend
 from functools import partial
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
 from apps.base.tasks import approve_recurring_transaction
 from apps.base.pagination import PaginationAPI
+from apps.transaction.filters import RecurringTransactionFilter
 from apps.transaction.models import RecurringTransactionModel
 from apps.transaction.serializers import (
     CreateUpdateRecurringTransactionSerializer,
@@ -18,8 +20,9 @@ from apps.transaction.serializers import (
 class RecurringTransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = PaginationAPI
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecurringTransactionFilter
 
-    # TODO: implementar filters com django-filter
     def get_queryset(self):
         return RecurringTransactionModel.objects.filter(account__in=self.request.user.accounts.all())
 

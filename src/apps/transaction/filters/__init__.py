@@ -1,1 +1,2 @@
+from .recurring_transaction_filter import RecurringTransactionFilter
 from .transaction_filter import TransactionFilter

@@ -1,7 +1,6 @@
 # TODO: implementar módulo de cartão de crédito
-# TODO: criar filtros para as recurring_transaction
 # TODO: refatorar todos os serializer que usam BaseMiniSerializer
 # TODO: suporte para contas com moedas diferentes
 # TODO: endpoint para transformar transaction em recurring_transaction
-# TODO: aprovar recurring_transaction antes do horário
 # TODO: criar uma function no TransactionSerivce para update_recurring_transaction
+# TODO: otimizar queries com select_related e prefetch_related
