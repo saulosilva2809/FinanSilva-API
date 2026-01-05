@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics, permissions
 
 from apps.base.pagination import PaginationAPI
@@ -15,7 +16,11 @@ class TransferListCreateView(generics.ListCreateAPIView):
     pagination_class = PaginationAPI
 
     def get_queryset(self):
-        return TransferModel.objects.filter(original_account__in=self.request.user.accounts.all())
+        user_accounts = self.request.user.accounts.all()
+        return TransferModel.objects.filter(
+            Q(original_account__in=user_accounts) |
+            Q(account_transferred__in=user_accounts)
+        ).distinct()
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -32,7 +37,11 @@ class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return TransferModel.objects.filter(original_account__in=self.request.user.accounts.all())
+        user_accounts = self.request.user.accounts.all()
+        return TransferModel.objects.filter(
+            Q(original_account__in=user_accounts) |
+            Q(account_transferred__in=user_accounts)
+        ).distinct()
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
