@@ -157,4 +157,4 @@ class TransactionService:
 
         except IntegrityError:
             # idempotency_key repetida → retorna a transação já criada
-            return TransferModel.objects.get(idempotency_key=instance.idempotency_key)
+            return TransferModel.objects.get(transfer_root=instance)
