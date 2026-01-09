@@ -25,10 +25,6 @@ class CreateUpdateTransferSerializer(serializers.ModelSerializer):
                 'account_transferred': 'A conta de destino não pode ser a mesma que a conta de origem.'
             })
 
-        if original_account and value and value > original_account.balance:
-            raise serializers.ValidationError({
-                'value': 'Você não possui saldo suficiente nesta conta para realizar esta transferência.'
-            })
         
         if original_account and original_account.user != user:
             raise serializers.ValidationError({
@@ -38,6 +34,11 @@ class CreateUpdateTransferSerializer(serializers.ModelSerializer):
         if account_transferred and account_transferred.user != user:
             raise serializers.ValidationError({
                 'account_transferred': 'Você só pode transferir para contas que pertencem a você.'
+            })
+
+        if original_account and value and value > original_account.balance:
+            raise serializers.ValidationError({
+                'value': 'Você não possui saldo suficiente nesta conta para realizar esta transferência.'
             })
 
         return attrs
