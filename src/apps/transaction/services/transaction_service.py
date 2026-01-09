@@ -12,11 +12,11 @@ from apps.transaction.models.choices import TypeTransactionChoices
 
 logger = logging.getLogger(__name__)
 
+# TODO: implementar lógica após deletar Transfer, Transactions
 class TransactionService:
-
     @staticmethod
     @transaction.atomic
-    def update_balance_accounts(instance: TransactionModel):
+    def create_transaction(instance: TransactionModel):
         try:
             account = (
                 AccountModel.objects
@@ -44,35 +44,6 @@ class TransactionService:
             return TransactionModel.objects.get(
                 idempotency_key=instance.idempotency_key
             )
-        
-    @staticmethod
-    @transaction.atomic
-    def update_transaction(old_instance, new_instance):
-        account = (
-            AccountModel.objects
-            .select_for_update()
-            .get(id=new_instance.account_id)
-        )
-
-        old_value = old_instance.value
-        new_value = new_instance.value
-
-        old_type = old_instance.type_transaction
-        new_type = new_instance.type_transaction
-
-        # desfaz impacto antigo
-        if old_type == 'RECEITA':
-            account.balance -= old_value
-        else:
-            account.balance += old_value
-
-        # aplica impacto novo
-        if new_type == 'RECEITA':
-            account.balance += new_value
-        else:
-            account.balance -= new_value
-
-        account.save()
 
     @staticmethod
     @transaction.atomic
@@ -120,9 +91,6 @@ class TransactionService:
             original_account = AccountModel.objects.select_for_update().get(id=instance.original_account.id)
             account_transferred = AccountModel.objects.select_for_update().get(id=instance.account_transferred.id)
 
-            if account_transferred.user != request.user:
-                raise PermissionDenied("Você não tem permissão para transferir a essa conta.")
-
             if instance.processed:
                 return
             
@@ -149,8 +117,8 @@ class TransactionService:
                 transfer_root=instance,
             )
 
-            TransactionService.update_balance_accounts(first_transaction)
-            TransactionService.update_balance_accounts(second_transaction)
+            TransactionService.create_transaction(first_transaction)
+            TransactionService.create_transaction(second_transaction)
 
             instance.processed = True
             instance.save(update_fields=['processed'])
@@ -158,3 +126,51 @@ class TransactionService:
         except IntegrityError:
             # idempotency_key repetida → retorna a transação já criada
             return TransferModel.objects.get(transfer_root=instance)
+        
+    @staticmethod
+    @transaction.atomic
+    def update_transaction(old_instance, new_instance):
+        account = (
+            AccountModel.objects
+            .select_for_update()
+            .get(id=new_instance.account_id)
+        )
+
+        old_value = old_instance.value
+        new_value = new_instance.value
+
+        old_type = old_instance.type_transaction
+        new_type = new_instance.type_transaction
+
+        # desfaz impacto antigo
+        if old_type == 'RECEITA':
+            account.balance -= old_value
+        else:
+            account.balance += old_value
+
+        # aplica impacto novo
+        if new_type == 'RECEITA':
+            account.balance += new_value
+        else:
+            account.balance -= new_value
+
+        account.save()
+
+    @staticmethod
+    @transaction.atomic
+    def delete_transaction(instance: TransactionModel):
+        if instance.type_transaction == 'RECEITA':
+            instance.account.balance -= instance.value
+        else:
+            instance.account.balance += instance.value
+
+        instance.account.save()
+        instance.delete()
+    
+    @staticmethod
+    @transaction.atomic
+    def delete_transfer(instance: TransferModel):
+        instance.account_transferred.balance -= instance.value
+        instance.account_transferred.save(update_fields=['balance'])
+
+        instance.delete()
