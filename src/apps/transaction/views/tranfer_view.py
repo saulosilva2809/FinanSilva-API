@@ -47,3 +47,6 @@ class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return CreateUpdateTransferSerializer
         return DetailTransferSerializer
+    
+    def perform_destroy(self, instance):
+        TransactionService.delete_transfer(instance)
