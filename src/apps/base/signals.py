@@ -20,5 +20,10 @@ def clear_dashboard_cache(sender, instance, **kwargs):
     elif sender == TransferModel:
         user_id = instance.original_account.user.id
 
-    cache_key = f"user_dashboard_{user_id}"
-    cache.delete(cache_key)
+    index_key = f'user_dashboard_index_{user_id}'
+    keys_to_delete = cache.get(index_key, set())
+
+    if keys_to_delete:
+        cache.delete_many(list(keys_to_delete))
+    
+    cache.delete(index_key)

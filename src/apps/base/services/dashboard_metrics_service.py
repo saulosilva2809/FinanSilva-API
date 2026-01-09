@@ -285,21 +285,24 @@ class DashboardMetrics():
         return response
 
     def get_cached_dashboard(self):
-        # 1. Pegamos a Query String bruta da URL (ex: "account_name=oi&category=1")
-        # Isso garante que QUALQUER mudança no filtro mude a chave
+        # pega a Query String bruta da URL (ex: "account_name=oi&category=1")
         query_params = self.request.GET.urlencode()
-
-        # 2. Criamos um hash curto para a chave não ficar gigante e dar erro
+        # cria uma hash curta para a chave não ficar gigante e dar erro
         query_hash = hashlib.md5(query_params.encode()).hexdigest()
 
-        # 3. Geramos a chave única por usuário e por combinação de filtros
         cache_key = f"user_dashboard_{self.request.user.id}_{query_hash}"
+        index_key = f'user_dashboard_index_{self.request.user.id}'
         
         data = cache.get(cache_key)
         
         if not data:
             data = self.set_response()
             cache.set(cache_key, data, 3600)
+
+            keys_list = cache.get(index_key, set())
+            keys_list.add(cache_key)
+            cache.set(index_key, keys_list, 3600)
+
             logger.info(f"Pegando dados via BD (Filtros: {query_params})")
         else:
             logger.info("Pegando dados via CACHE")
