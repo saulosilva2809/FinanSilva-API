@@ -3,7 +3,6 @@ import uuid
 
 from django.db import IntegrityError, transaction
 from django.utils.timezone import now
-from rest_framework.exceptions import PermissionDenied
 
 from apps.account.models import AccountModel
 from apps.transaction.models import RecurringTransactionModel, TransactionModel, TransferModel
@@ -12,7 +11,6 @@ from apps.transaction.models.choices import TypeTransactionChoices
 
 logger = logging.getLogger(__name__)
 
-# TODO: implementar lógica após deletar Transfer, Transactions
 class TransactionService:
     @staticmethod
     @transaction.atomic

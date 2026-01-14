@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from apps.account.models import AccountModel
 from apps.transaction.models.choices import TypeTransactionChoices
 from apps.transaction.models import RecurringTransactionModel
 
