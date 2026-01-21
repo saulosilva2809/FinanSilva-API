@@ -19,7 +19,16 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     filterset_class = TransactionFilter
 
     def get_queryset(self):
-        return TransactionModel.objects.filter(account__in=self.request.user.accounts.all())
+        return TransactionModel.objects.filter(
+            account__in=self.request.user.accounts.all()
+        ).select_related(
+            'account',
+            'category',
+            'subcategory',
+            'transfer_root',
+            'transfer_root__original_account',
+            'transfer_root__account_transferred'
+        )
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -28,7 +37,7 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         instance = serializer.save()
-        TransactionService.create_transaction(instance)
+        TransactionService.update_balance_account(instance)
 
 
 class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
