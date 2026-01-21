@@ -1,0 +1,2 @@
+from .message_register import message_register
+from .message_update_profile import message_update_profile
