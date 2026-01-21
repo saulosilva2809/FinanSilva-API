@@ -17,6 +17,7 @@ def process_recurring_transaction(self, recurring_id):
         with transaction.atomic():
             rec = RecurringTransactionModel.objects.select_for_update().get(id=recurring_id)
 
+            logger.info('Criando Transaction para Recurring Transaction')
             TransactionService.create_transaction_from_recurring_transaction(rec)
 
             # calcula próxima data
@@ -30,12 +31,16 @@ def process_recurring_transaction(self, recurring_id):
                 clocked_time=next_date
             )
 
-            logger.info('Apagando a PeriodicTask anterior')
-            old_task = PeriodicTask.objects.get(
+            logger.info('Apagando a PeriodicTask e ClockedSchedule anterior')
+            old_task = PeriodicTask.objects.filter(
                 name=f"transaction_{rec.id}",
-            )
+            ).first()
             if old_task:
+                old_next_time = old_task.clocked
                 old_task.delete()
+
+                if old_next_time:
+                    old_next_time.delete()
 
             logger.info('Criando nova PeriodicTask')
             PeriodicTask.objects.create(
@@ -45,6 +50,8 @@ def process_recurring_transaction(self, recurring_id):
                 one_off=True,
                 args=json.dumps([str(rec.id)]),
             )
+
+            # TODO: definir o envio de email aqui
 
     except Exception as e:
         logger.exception(f'Erro inesperado: {e}')

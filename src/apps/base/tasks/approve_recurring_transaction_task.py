@@ -6,17 +6,16 @@ from django.db import transaction
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from apps.transaction.email_messages import messages_approve_recurring_transaction
+from apps.base.email_messages import message_approve_recurring_transaction
+from apps.base.tasks import send_email_task # se der circular import volta essa import para dentro da def
 from apps.transaction.models import RecurringTransactionModel
-from apps.transaction.services import TransactionService
 
 
 logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={'max_retries': 5})
 def approve_recurring_transaction(self, recurring_id):
-    from apps.base.tasks import send_emai_task
-
+    from apps.transaction.services import TransactionService
     try:
         with transaction.atomic():
             # pegando a rec no db
@@ -65,11 +64,11 @@ def approve_recurring_transaction(self, recurring_id):
         new_time_fmt = timezone.localtime(next_date).strftime('%d/%m/%Y %H:%M')
         updated_at = timezone.localtime(rec.updated_at).strftime('%d/%m/%Y %H:%M')
 
-        messages = messages_approve_recurring_transaction(rec, old_time_fmt, updated_at, new_time_fmt)
+        messages = message_approve_recurring_transaction(rec, old_time_fmt, updated_at, new_time_fmt)
 
         # enviando o e-mail usando a task 
         transaction.on_commit(
-            lambda: send_emai_task.delay(
+            lambda: send_email_task.delay(
                 subject=messages['email_subject'],
                 message=messages['email_body'],
                 recipient_list=[rec.account.user.email]

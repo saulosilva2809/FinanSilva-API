@@ -1,3 +1,3 @@
 from .approve_recurring_transaction_task import approve_recurring_transaction
 from .process_recurring_transaction_task import process_recurring_transaction
-from .send_email_task import send_emai_task
+from .send_email_task import send_email_task
