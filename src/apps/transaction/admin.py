@@ -9,6 +9,7 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ('created_at', 'updated_at', 'account', 'value', 'type_transaction', 'recurring_root', 'transfer_root')
 
     # para várias exclusões
+    # #TODO: corrija erra aqui, mesmo excluindo todas ele erra no calculo, testar excluindo várias
     def delete_queryset(self, request, queryset):
         for obj in queryset:
             TransactionService.delete_transaction(obj)
