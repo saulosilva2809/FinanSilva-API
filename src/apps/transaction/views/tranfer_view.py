@@ -29,7 +29,7 @@ class TransferListCreateView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         instance = serializer.save()
-        TransactionService.create_transaction_from_transfer(self.request, instance)
+        TransactionService.create_transaction_from_transfer(instance)
 
 
 class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
