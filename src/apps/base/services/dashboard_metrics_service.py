@@ -219,8 +219,8 @@ class DashboardMetrics():
                 'value': float(ts.value),
                 'type_transaction': ts.type_transaction,
                 'frequency': ts.frequency,
-                'next_run_date': ts.next_run_date,
-                'init_date': ts.init_date,
+                'next_run_date': timezone.localtime(ts.next_run_date),
+                'init_date': timezone.localtime(ts.init_date),
                 'account': {
                     'id': ts.account.id,
                     'name': ts.account.name,
