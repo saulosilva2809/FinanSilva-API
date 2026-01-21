@@ -3,6 +3,7 @@ import json
 from django.db import transaction
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from apps.transaction.models import RecurringTransactionModel
@@ -12,6 +13,7 @@ from apps.transaction.models import RecurringTransactionModel
 def create_task_celery_to_recurring_transaction(sender, instance: RecurringTransactionModel, created, **kwargs):
     if created and instance.active:
         run_date = instance.init_date
+        run_date = timezone.localtime(run_date)
 
         instance.next_run_date = instance.set_next_run_date()
         instance.save(update_fields=['next_run_date'])
