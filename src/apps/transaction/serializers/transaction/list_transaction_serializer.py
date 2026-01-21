@@ -18,7 +18,12 @@ class ListTransactionSerializer(serializers.ModelSerializer):
         "name": serializers.CharField()
     })
     recurring_root = BaseMiniSerializer({"id": serializers.UUIDField()})
-    transfer_root = BaseMiniSerializer({"id": serializers.UUIDField()})
+    transfer_root = BaseMiniSerializer({
+        "id": serializers.UUIDField(),
+        "original_account": serializers.CharField(),
+        "account_transferred": serializers.CharField()
+    })
+    is_transfer = serializers.SerializerMethodField()
 
     class Meta:
         model = TransactionModel
@@ -30,5 +35,9 @@ class ListTransactionSerializer(serializers.ModelSerializer):
             'category',
             'subcategory',
             'recurring_root',
+            'is_transfer',
             'transfer_root',
         ]
+
+    def get_is_transfer(self, obj):
+        return obj.transfer_root is not None
