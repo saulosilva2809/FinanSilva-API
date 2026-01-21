@@ -8,6 +8,7 @@ from apps.account.serializers import (
     UpdateAccountSerializer,
     ViewAccountSerializer
 )
+from apps.account.services import AccountService
 from apps.base.pagination import PaginationAPI
 
 
@@ -24,6 +25,10 @@ class AccountListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return CreateAccountSerializer
         return ViewAccountSerializer
+    
+    def perform_create(self, serializer):
+        account_instance = serializer.save()
+        AccountService().create_account(account_instance)
 
 
 class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -37,3 +42,6 @@ class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return UpdateAccountSerializer
         return ViewAccountSerializer
+    
+    def perform_destroy(self, instance):
+        AccountService().delete_account(instance)
