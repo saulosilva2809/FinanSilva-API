@@ -2,4 +2,5 @@
 # TODO: suporte para contas com moedas diferentes
 # TODO: endpoint para transformar transaction em recurring_transaction
 # TODO: otimizar queries com select_related e prefetch_related
+# TODO: otimizar 'get_queryset' das views com select_related e prefetch_related
 # TODO: definir envio de email em certas ações (definir end to end)
