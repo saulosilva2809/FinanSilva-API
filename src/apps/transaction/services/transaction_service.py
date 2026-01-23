@@ -57,13 +57,13 @@ class TransactionService:
         new_type = new_instance.type_transaction
 
         # desfaz impacto antigo
-        if old_type == 'RECEITA':
+        if old_type == TypeTransactionChoices.RECIPE:
             account.balance -= old_value
         else:
             account.balance += old_value
 
         # aplica impacto novo
-        if new_type == 'RECEITA':
+        if new_type == TypeTransactionChoices.RECIPE:
             account.balance += new_value
         else:
             account.balance -= new_value
