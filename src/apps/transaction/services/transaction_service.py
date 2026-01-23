@@ -3,7 +3,7 @@ import logging
 from django.db import IntegrityError, transaction as django_transaction
 
 from apps.account.models import AccountModel
-from apps.transaction.models import RecurringTransactionModel, TransactionModel
+from apps.transaction.models import TransactionModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
 
