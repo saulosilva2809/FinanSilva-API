@@ -72,7 +72,7 @@ class TransactionService:
 
     @staticmethod
     @django_transaction.atomic
-    def delete_transaction(instance: TransactionModel | RecurringTransactionModel):
+    def delete_transaction(instance: TransactionModel):
         if instance.type_transaction == 'RECEITA':
             instance.account.balance -= instance.value
         else:
