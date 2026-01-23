@@ -8,7 +8,7 @@ from apps.transaction.serializers import (
     DetailTransferSerializer,
     ListTransferSerializer,
 )
-from apps.transaction.services import TransactionService
+from apps.transaction.services import TransferService
 
 
 class TransferListCreateView(generics.ListCreateAPIView):
@@ -29,7 +29,7 @@ class TransferListCreateView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         instance = serializer.save()
-        TransactionService.create_transaction_from_transfer(instance)
+        TransferService.create_transaction_from_transfer(instance)
 
 
 class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -49,4 +49,4 @@ class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return DetailTransferSerializer
     
     def perform_destroy(self, instance):
-        TransactionService.delete_transfer(instance)
+        TransferService.delete_transfer(instance)

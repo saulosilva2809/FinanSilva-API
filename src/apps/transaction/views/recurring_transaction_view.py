@@ -15,7 +15,7 @@ from apps.transaction.serializers import (
     SimulateApprovalInputSerializer,
     SimulateApprovalOutputSerializer,
 )
-from apps.transaction.services import TransactionService
+from apps.transaction.services import RecurringTransactionService
 
 
 class RecurringTransactionListCreateView(generics.ListCreateAPIView):
@@ -44,6 +44,9 @@ class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestr
         if self.request.method in ['PUT', 'PATCH']:
             return CreateUpdateRecurringTransactionSerializer
         return DetailRecurringTransactionSerializer
+    
+    def perform_destroy(self, instance):
+        RecurringTransactionService.delete_recurring_transaction(instance)
 
 
 class SimulateApprovalRecurringTransaction(generics.GenericAPIView):
