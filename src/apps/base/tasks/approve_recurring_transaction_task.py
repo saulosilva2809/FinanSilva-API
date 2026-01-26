@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={'max_retries': 5})
 def approve_recurring_transaction(self, recurring_id):
-    from apps.transaction.services import TransactionService
+    from apps.transaction.services import RecurringTransactionService
     try:
         with transaction.atomic():
             # pegando a rec no db
             rec = RecurringTransactionModel.objects.select_for_update().get(id=recurring_id)
 
             # criando a transaction com base na rec
-            TransactionService.create_transaction_from_recurring_transaction(rec)
+            RecurringTransactionService.create_transaction_from_recurring_transaction(rec)
 
             # marca como executado pela primeira vez e marca o horário da ultima vez que executou
             rec.executed_first_time = True
