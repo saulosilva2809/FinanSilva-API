@@ -9,13 +9,13 @@ from apps.transaction.email_messages import (
     message_recurring_transaction_created,
 )
 from apps.transaction.models import RecurringTransactionModel, TransactionModel
-from apps.transaction.services import TransactionService
 
 
 class RecurringTransactionService:
     @staticmethod
     @django_transaction.atomic
     def create_transaction_from_recurring_transaction(instance: RecurringTransactionModel):
+        from apps.transaction.services import TransactionService
         try:
             # bloqueia a conta
             account = AccountModel.objects.select_for_update().get(id=instance.account_id)
@@ -48,7 +48,7 @@ class RecurringTransactionService:
             instance.save()
 
             django_transaction.on_commit(
-                lambda: TransactionService.send_email_when_recurring_transaction_created(
+                lambda: RecurringTransactionService.send_email_when_recurring_transaction_created(
                     instance
                 )
             )
