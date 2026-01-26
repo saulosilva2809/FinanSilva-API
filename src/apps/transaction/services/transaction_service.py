@@ -73,10 +73,12 @@ class TransactionService:
     @staticmethod
     @django_transaction.atomic
     def delete_transaction(instance: TransactionModel):
+        account = AccountModel.objects.select_for_update().get(id=instance.account.id)
+
         if instance.type_transaction == 'RECEITA':
-            instance.account.balance -= instance.value
+            account.balance -= instance.value
         else:
-            instance.account.balance += instance.value
+            account.balance += instance.value
 
         instance.account.save()
         instance.delete()

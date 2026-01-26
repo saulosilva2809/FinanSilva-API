@@ -1,2 +1,3 @@
 from .message_recurring_transaction_created import message_recurring_transaction_created
+from .message_recurring_transaction_success import message_recurring_transaction_success
 from .message_transfer_completed import message_transfer_completed
