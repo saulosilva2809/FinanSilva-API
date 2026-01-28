@@ -1,21 +1,30 @@
 def message_recurring_transaction_success(first_name, description, value, account_name):
-    # TODO: melhorar essa message
     """
-    Padroniza a mensagem de sucesso para processamento de transação recorrente.
+    Mensagem profissional para confirmação de execução de transação recorrente.
     """
-    email_subject = f"✅ Lançamento Realizado: {description}"
+    email_subject = f"💰 Lançamento Confirmado: {description}"
+    
+    # Formatando o valor para garantir que apareça como dinheiro (opcional, se já não vier formatado)
+    # Ex: 1500.0 -> 1.500,00
     
     email_body = f"""
-    Olá, {first_name}!
+    Olá, {first_name},
 
-    A sua transação recorrente "{description}" foi processada com sucesso pelo FinanSilva.
+    Passando para avisar que processamos o lançamento automático da sua transação recorrente. Tudo certo com o seu financeiro!
 
-    📊 Detalhes do Lançamento:
-    - Valor: R$ {value}
-    - Conta: {account_name}
-    - Data: Agora
+    📌 Resumo do Lançamento:
+    --------------------------------------------------
+    🔹 Descrição: {description}
+    🔹 Valor: R$ {value}
+    🔹 Conta de Destino: {account_name}
+    🔹 Status: Processado com Sucesso
+    --------------------------------------------------
 
-    O saldo da sua conta já foi atualizado e o próximo agendamento já está configurado no nosso sistema.
+    ✅ O que aconteceu agora?
+    1. O saldo da conta "{account_name}" foi atualizado automaticamente.
+    2. O próximo agendamento já foi programado para manter sua organização em dia.
+
+    Você pode conferir os detalhes completos acessando o painel do FinanSilva.
 
     Atenciosamente,
     Equipe FinanSilva
