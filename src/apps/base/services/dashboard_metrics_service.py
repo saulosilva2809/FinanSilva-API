@@ -55,24 +55,16 @@ class DashboardMetrics():
         if self.subcategory:
             filters['subcategory'] = self.subcategory
 
-        return TransactionModel.objects.select_related(
-            'account', 'category', 'subcategory'
-        ).filter(**filters)
+        return TransactionModel.objects.filter(**filters)
 
     def total_filtered_values(self):
-        total_recipe = (
-            self.transactions.filter(
-                type_transaction=TypeTransactionChoices.RECIPE
-            )
-            .aggregate(total=Sum("value"))["total"] or 0
+        stats = self.transactions.aggregate(
+            recipe=Sum('value', filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
+            expense=Sum('value', filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
         )
 
-        total_expense = (
-            self.transactions.filter(
-                type_transaction=TypeTransactionChoices.EXPENSE
-            )
-            .aggregate(total=Sum("value"))["total"] or 0
-        )
+        total_recipe = float(stats['recipe'] or 0)
+        total_expense = float(stats['expense'] or 0)
 
         return {
             'total_balance': total_recipe - total_expense,
@@ -104,6 +96,7 @@ class DashboardMetrics():
                 income=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
                 expense=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
             )
+            .filter(Q(income__gt=0) | Q(expense__gt=0))
         )
 
         income_list = []
@@ -159,115 +152,123 @@ class DashboardMetrics():
             summary[month_str] = {
                 'recipes': recipes,
                 'expenses': expenses,
-                'transfers': 0,
+                'transfers': 0.0,
                 'balance': recipes - expenses
             }
 
         for item in transfers_qs:
             month_str = item["month"].strftime("%Y-%m")
-            total_transfer = item["total"] or 0
+            total_transfer = item["total"] or 0.0
             if month_str in summary:
                 summary[month_str]['transfers'] = total_transfer
             else:
                 summary[month_str] = {
-                    'recipes': 0, 'expenses': 0, 
-                    'transfers': total_transfer, 'balance': 0
+                    'recipes': 0.0, 'expenses': 0.0, 
+                    'transfers': total_transfer, 'balance': 0.0
                 }
 
         return summary
     
     def recent_transactions(self):
-        transactions = (
-            self.transactions
-            .select_related('account', 'category')
-            .order_by('-created_at')[:5]
+        raw_data = self.transactions.order_by('-created_at')[:5].values(
+            'id', 'value', 'type_transaction', 'created_at',
+            'account__id', 'account__name',
+            'category__id', 'category__name',
+            'subcategory__id', 'subcategory__name'
         )
 
         return [
             {
-                "id": ts.id,
-                "value": float(ts.value),
-                "type_transaction": ts.type_transaction,
-                "created_at": ts.created_at,
+                "id": transaction['id'],
+                "value": float(transaction['value']),
+                "type_transaction": transaction['type_transaction'],
+                "created_at": transaction['created_at'],
                 "account": {
-                    "id": ts.account.id,
-                    "name": ts.account.name,
+                    "id": transaction['account__id'],
+                    "name": transaction['account__name'],
                 },
                 "category": {
-                    "id": ts.category.id,
-                    "name": ts.category.name,
-                } if ts.category else None,
+                    "id": transaction['category__id'],
+                    "name": transaction['category__name'],
+                } if transaction['category__id'] else None,
                 "subcategory": {
-                    "id": ts.subcategory.id,
-                    "name": ts.subcategory.name,
-                } if ts.subcategory else None,
+                    "id": transaction['subcategory__id'],
+                    "name": transaction['subcategory__name'],
+                } if transaction['subcategory__id'] else None,
             }
-            for ts in transactions
+            for transaction in raw_data
         ]
-
     
     def upcoming_transactions(self):
-        rec_transactions = RecurringTransactionModel.objects.filter(
+        raw_data = RecurringTransactionModel.objects.filter(
             account_id__in=self.account_ids, active=True
-        ).select_related(
-            'account', 'category'
-        ).order_by('next_run_date')[:5]
+        ).order_by('-created_at')[:5].values(
+            'id', 'value', 'type_transaction', 'frequency',
+            'next_run_date', 'init_date', 
+            'account__id', 'account__name',
+            'category__id', 'category__name',
+            'subcategory__id', 'subcategory__name',
+        )
 
         return [
             {
-                'id': ts.id,
-                'value': float(ts.value),
-                'type_transaction': ts.type_transaction,
-                'frequency': ts.frequency,
-                'next_run_date': timezone.localtime(ts.next_run_date),
-                'init_date': timezone.localtime(ts.init_date),
-                'account': {
-                    'id': ts.account.id,
-                    'name': ts.account.name,
+                'id': rec_transaction['id'],
+                'value': float(rec_transaction['value']),
+                'type_transaction': rec_transaction['type_transaction'],
+                'frequency': rec_transaction['frequency'],
+                'next_run_date': timezone.localtime(rec_transaction['next_run_date']),
+                'init_date': timezone.localtime(rec_transaction['init_date']),
+                "account": {
+                    "id": rec_transaction['account__id'],
+                    "name": rec_transaction['account__name'],
                 },
-                'category': {
-                    'id': ts.category.id,
-                    'name': ts.category.name,
-                } if ts.category else None,
-                'subcategory': {
-                    'id': ts.subcategory.id,
-                    'name': ts.subcategory.name,
-                } if ts.subcategory else None,
+                "category": {
+                    "id": rec_transaction['category__id'],
+                    "name": rec_transaction['category__name'],
+                } if rec_transaction['category__id'] else None,
+                "subcategory": {
+                    "id": rec_transaction['subcategory__id'],
+                    "name": rec_transaction['subcategory__name'],
+                } if rec_transaction['subcategory__id'] else None,
             }
-            for ts in rec_transactions
+            for rec_transaction in raw_data
         ]
     
     def recent_transfers(self):
-        transfers = TransferModel.objects.select_related(
-            'original_account', 'account_transferred', 'category', 'subcategory'
-        ).filter(original_account_id__in=self.account_ids)
+        # IDs das contas
+        ids = self.account_ids 
+
+        # busca transferências onde a conta é a origem
+        q1 = TransferModel.objects.filter(original_account_id__in=ids)
+        
+        # busca transferências onde a conta é o destino
+        q2 = TransferModel.objects.filter(account_transferred_id__in=ids)
+
+        # une as duas e limita
+        transfers = q1.union(q2).order_by('-created_at')[:5].values(
+            'id', 'value', 'created_at',
+            'original_account__name',
+            'account_transferred__name',
+            'category__name'
+        )
 
         return [
             {
-                'id': transfer.id,
-                'value': float(transfer.value),
+                'id': t['id'],
+                'value': float(t['value']),
+                'created_at': t['created_at'],
                 'original_account': {
-                    'id': transfer.original_account.id,
-                    'name': transfer.original_account.name,
+                    'name': t['original_account__name']
                 },
                 'account_transferred': {
-                    'id': transfer.account_transferred.id,
-                    'name': transfer.account_transferred.name,
+                    'name': t['account_transferred__name']
                 },
-                'value': transfer.value,
-                'created_at': transfer.created_at,
                 'category': {
-                    'id': transfer.category.id,
-                    'name': transfer.category.name,
-                } if transfer.category else None,
-                'subcategory': {
-                    'id': transfer.subcategory.id,
-                    'name': transfer.subcategory.name,
-                } if transfer.subcategory else None,
+                    'name': t['category__name']
+                } if t['category__name'] else None,
             }
-            for transfer in transfers
+            for t in transfers
         ]
-    
             
     def set_response(self):
         response = {
