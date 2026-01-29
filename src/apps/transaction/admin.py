@@ -1,7 +1,8 @@
 from django.contrib import admin
+from django.db import transaction
 
 from .models import RecurringTransactionModel, TransactionModel, TransferModel
-from apps.transaction.services import TransactionService
+from apps.transaction.services import TransactionService, TransferService
 
 
 @admin.register(TransactionModel)
@@ -9,10 +10,10 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ('created_at', 'updated_at', 'account', 'value', 'type_transaction', 'recurring_root', 'transfer_root')
 
     # para várias exclusões
-    # #TODO: corrija erra aqui, mesmo excluindo todas ele erra no calculo, testar excluindo várias
     def delete_queryset(self, request, queryset):
-        for obj in queryset:
-            TransactionService.delete_transaction(obj)
+        with transaction.atomic():
+            for obj in queryset:
+                TransactionService.delete_transaction(obj)
 
     # para uma única
     def delete_model(self, request, obj):
@@ -30,7 +31,7 @@ class TransferAdmin(admin.ModelAdmin):
 
     def delete_queryset(self, request, queryset):
         for obj in queryset:
-            TransactionService.delete_transfer(obj)
+            TransferService.delete_transfer(obj)
 
     def delete_model(self, request, obj):
-        TransactionService.delete_transfer(obj)
+        TransferService.delete_transfer(obj)
