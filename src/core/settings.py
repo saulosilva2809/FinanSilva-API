@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'django_filters',
 
     # CELERY
     'django_celery_beat',
@@ -56,6 +57,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # django-querycount
+    'querycount.middleware.QueryCountMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -228,3 +232,20 @@ if DEBUG:
     import socket
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+
+# Configurações do Django QueryCount
+QUERYCOUNT = {
+    'THRESHOLDS': {
+        'MEDIUM': 5,      # Amarelo: Atenção, começou a subir
+        'HIGH': 10,       # Vermelho: Nível crítico de N+1
+        'MIN_TIME_TO_LOG': 0, # Tempo mínimo para exibir (0 exibe todas)
+        'MIN_QUERY_COUNT_TO_LOG': 0, 
+    },
+    'IGNORE_PATH': [
+        r'^/admin/',      # Ignora o painel administrativo
+        r'^/static/',     # Ignora arquivos estáticos
+        r'^/favicon.ico', # Ignora ícone do navegador
+    ],
+    'IGNORE_REQUEST_METHODS': ['OPTIONS'], # Ignora requisições de pre-flight do CORS
+    'DISPLAY_DUPLICATES': True,            # MUITO IMPORTANTE: mostra se você repetiu a mesma query
+}
