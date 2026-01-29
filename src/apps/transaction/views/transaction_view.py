@@ -16,15 +16,17 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = PaginationAPI
     filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 
     def get_queryset(self):
         return TransactionModel.objects.filter(
-            account__in=self.request.user.accounts.all()
+            account__user=self.request.user
         ).select_related(
             'account',
             'category',
             'subcategory',
+            'recurring_root',
             'transfer_root',
             'transfer_root__original_account',
             'transfer_root__account_transferred'
