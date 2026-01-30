@@ -7,13 +7,14 @@ from apps.transaction.email_messages import (
 )
 from apps.transaction.models import TransactionModel, TransferModel
 from apps.transaction.models.choices import TypeTransactionChoices
-from apps.transaction.services import TransactionService
 
 
 class TransferService:
     @staticmethod
     @django_transaction.atomic
     def create_transaction_from_transfer(instance: TransferModel):
+        from apps.transaction.services import TransactionService
+
         try:
             # bloqueia a conta
             original_account = AccountModel.objects.select_for_update().get(id=instance.original_account.id)
@@ -52,7 +53,7 @@ class TransferService:
             instance.save(update_fields=['processed'])
 
             django_transaction.on_commit(
-                lambda: TransactionService.send_email_when_transfer_created(
+                lambda: TransferService.send_email_when_transfer_created(
                     instance
                 )
             )
