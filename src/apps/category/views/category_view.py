@@ -18,7 +18,9 @@ class CategoryListCreateView(generics.ListCreateAPIView):
     filterset_class = CategoryFilter
 
     def get_queryset(self):
-        return CategoryModel.objects.filter(account__in=self.request.user.accounts.all())
+        return CategoryModel.objects.filter(
+            account__user=self.request.user
+        ).select_related('account')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -31,7 +33,9 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return CategoryModel.objects.filter(account__in=self.request.user.accounts.all())
+        return CategoryModel.objects.filter(
+            account__user=self.request.user
+        ).select_related('account')
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

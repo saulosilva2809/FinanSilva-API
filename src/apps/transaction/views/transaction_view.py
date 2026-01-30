@@ -47,7 +47,17 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return TransactionModel.objects.filter(account__in=self.request.user.accounts.all())
+        return TransactionModel.objects.filter(
+            account__user=self.request.user
+        ).select_related(
+            'account',
+            'category',
+            'subcategory',
+            'recurring_root',
+            'transfer_root',
+            'transfer_root__original_account',
+            'transfer_root__account_transferred'
+        )
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

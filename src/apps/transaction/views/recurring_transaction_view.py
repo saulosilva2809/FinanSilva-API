@@ -25,7 +25,13 @@ class RecurringTransactionListCreateView(generics.ListCreateAPIView):
     filterset_class = RecurringTransactionFilter
 
     def get_queryset(self):
-        return RecurringTransactionModel.objects.filter(account__in=self.request.user.accounts.all())
+        return RecurringTransactionModel.objects.filter(
+            account__in=self.request.user.accounts.all()
+        ).select_related(
+            'account',
+            'category',
+            'subcategory',
+        )
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -38,7 +44,13 @@ class RecurringTransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestr
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return RecurringTransactionModel.objects.filter(account__in=self.request.user.accounts.all())
+        return RecurringTransactionModel.objects.filter(
+            account__user=self.request.user
+        ).select_related(
+            'account',
+            'category',
+            'subcategory',
+        )
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -55,7 +67,17 @@ class SimulateApprovalRecurringTransaction(generics.GenericAPIView):
     
     def get_queryset(self):
         return RecurringTransactionModel.objects.filter(
-            account__in=self.request.user.accounts.all()
+            account__user=self.request.user
+        ).select_related(
+            'account'
+        ).only(
+            'id',
+            'value',
+            'type_transaction',
+            'description',
+            'frequency',
+            'account__id',
+            'account__name',
         )
 
     def post(self, request, *args, **kwargs):
@@ -78,7 +100,11 @@ class ApproveAdvanceRecurringTransactionView(generics.GenericAPIView):
 
     def get_queryset(self):
         return RecurringTransactionModel.objects.filter(
-            account__in=self.request.user.accounts.all()
+            account__user=self.request.user
+        ).select_related(
+            'account',
+            'category',
+            'subcategory',
         )
 
     def post(self, request, *args, **kwargs):

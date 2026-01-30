@@ -19,8 +19,8 @@ class SubCategoryListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return SubCategoryModel.objects.filter(
-            category__account__in=self.request.user.accounts.all()
-        )
+            category__account__user=self.request.user
+        ).select_related('category')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -31,8 +31,11 @@ class SubCategoryListCreateView(generics.ListCreateAPIView):
 class SubCategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'pk'
+
     def get_queryset(self):
-        return SubCategoryModel.objects.filter(category__account__in=self.request.user.accounts.all())
+        return SubCategoryModel.objects.filter(
+            category__account__user=self.request.user
+        ).select_related('category')
     
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
