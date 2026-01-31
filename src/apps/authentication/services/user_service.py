@@ -30,8 +30,8 @@ class UserService():
     def update_user(self, user_instance, serializer):
         changes = self._get_changes(user_instance, serializer)
         if changes:
-            self.save_updated_at_in_user(user_instance)
-            self.send_email(user_instance, changes)
+            self._save_updated_at_in_user(user_instance)
+            self._send_email(user_instance, changes)
 
         return user_instance
 
