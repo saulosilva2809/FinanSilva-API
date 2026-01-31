@@ -1,5 +1,6 @@
 from django.db import IntegrityError, transaction as django_transaction
 from django.utils import timezone
+from rest_framework.serializers import ValidationError
 
 from apps.account.models import AccountModel
 from apps.transaction.email_messages import (
@@ -12,13 +13,45 @@ from apps.transaction.models.choices import TypeTransactionChoices
 class TransferService:
     @staticmethod
     @django_transaction.atomic
-    def create_transaction_from_transfer(instance: TransferModel):
+    def create_transfer(data):
+        original_account_id = data['original_account'].id
+        account_transferred_id = data['account_transferred'].id
+
+        first_id, second_id = sorted([original_account_id, account_transferred_id])
+
+        accounts = {
+            acc.id: acc for acc in 
+            AccountModel.objects.select_for_update().filter(id__in=[first_id, second_id])
+        }
+
+        original_account = accounts[original_account_id]
+        account_transferred = accounts[account_transferred_id]
+
+        if data['value'] > original_account.balance:
+            raise ValidationError('Saldo insuficiente.')
+        
+        transfer = TransferModel.objects.create(**data)
+        TransferService.create_transaction_from_transfer(
+            transfer,
+            original_account,
+            account_transferred
+        )
+
+    @staticmethod
+    @django_transaction.atomic
+    def create_transaction_from_transfer(
+        instance: TransferModel,
+        original_account: AccountModel,
+        account_transferred: AccountModel
+    ):
         from apps.transaction.services import TransactionService
 
         try:
             # bloqueia a conta
-            original_account = AccountModel.objects.select_for_update().get(id=instance.original_account.id)
-            account_transferred = AccountModel.objects.select_for_update().get(id=instance.account_transferred.id)
+            if not original_account:
+                original_account = AccountModel.objects.select_for_update().get(id=instance.original_account.id)
+            if not account_transferred:
+                account_transferred = AccountModel.objects.select_for_update().get(id=instance.account_transferred.id)
 
             if instance.processed:
                 return
@@ -60,20 +93,37 @@ class TransferService:
 
         except IntegrityError:
             # idempotency_key repetida → retorna a transação já criada
-            return TransferModel.objects.get(transfer_root=instance)
+            return TransferModel.objects.get(idempotency_key=instance.idempotency_key)
         
     @staticmethod
     @django_transaction.atomic
     def delete_transfer(instance: TransferModel):
-        transctions = TransactionModel.objects.filter(transfer_root=instance)
-        transctions.delete()
+        with django_transaction.atomic:
+            # pegando e bloqueando as contas com o .select_for_update()
+            original_account = (
+                instance.original_account.__class__.objects
+                .select_for_update()
+                .get(pk=instance.original_account)
+            )
+            account_transferred = (
+                instance.original_account.__class__.objects
+                .select_for_update()
+                .get(pk=instance.account_transferred)
+            )
 
-        instance.account_transferred.balance -= instance.value
-        instance.original_account.balance += instance.value
-        instance.original_account.save(update_fields=['balance'])
-        instance.account_transferred.save(update_fields=['balance'])
+            # deletando as transactions
+            TransactionModel.objects.filter(transfer_root=instance).delete()
 
-        instance.delete()
+            # atualizando o saldo das contas
+            original_account.balance += instance.value
+            account_transferred.balance -= instance.value
+
+            # salvando as alterações
+            original_account.save()
+            account_transferred.save()
+
+            # deletando a transfer
+            instance.delete()
 
     @staticmethod
     def send_email_when_transfer_created(instance: TransferModel):

@@ -1,6 +1,7 @@
 import logging
 
 from django.db import IntegrityError, transaction as django_transaction
+from rest_framework.exceptions import ValidationError
 
 from apps.account.models import AccountModel
 from apps.transaction.models import TransactionModel
@@ -12,13 +13,26 @@ logger = logging.getLogger(__name__)
 class TransactionService:
     @staticmethod
     @django_transaction.atomic
-    def update_balance_account(instance: TransactionModel):
+    def create_transaction(data):
+        account = AccountModel.objects.select_for_update().get(
+            id=data['account'].id
+        )
+
+        if data['type_transaction'] == TypeTransactionChoices.EXPENSE:
+            if data['value'] > account.balance:
+                raise ValidationError('Saldo insuficiente.')
+
+        instance = TransactionModel.objects.create(**data)
+        TransactionService.update_balance_account(instance)
+
+        return instance
+
+    @staticmethod
+    @django_transaction.atomic
+    def update_balance_account(instance: TransactionModel, account: AccountModel):
         try:
-            account = (
-                AccountModel.objects
-                .select_for_update()
-                .get(id=instance.account_id)
-            )
+            if not account:
+                account = AccountModel.objects.select_for_update().get(id=instance.account_id)
 
             if instance.processed:
                 return
@@ -75,10 +89,10 @@ class TransactionService:
     def delete_transaction(instance: TransactionModel):
         account = AccountModel.objects.select_for_update().get(id=instance.account.id)
 
-        if instance.type_transaction == 'RECEITA':
+        if instance.type_transaction == TypeTransactionChoices.RECIPE:
             account.balance -= instance.value
         else:
             account.balance += instance.value
 
-        instance.account.save()
+        account.save()
         instance.delete()
