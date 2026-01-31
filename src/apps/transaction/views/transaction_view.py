@@ -10,12 +10,12 @@ from apps.transaction.serializers import (
     ListTransactionSerializer,
 )
 from apps.transaction.services import TransactionService
+from apps.transaction.permissions import IsTransactionOnwer
 
 
 class TransactionListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = PaginationAPI
-    filter_backends = [DjangoFilterBackend]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 
@@ -27,7 +27,8 @@ class TransactionListCreateView(generics.ListCreateAPIView):
             'category',
             'subcategory',
             'recurring_root',
-            'transfer_root',
+            'transfer_root'
+        ).prefetch_related(
             'transfer_root__original_account',
             'transfer_root__account_transferred'
         )
@@ -38,12 +39,11 @@ class TransactionListCreateView(generics.ListCreateAPIView):
         return ListTransactionSerializer
     
     def perform_create(self, serializer):
-        instance = serializer.save()
-        TransactionService.update_balance_account(instance)
+        TransactionService.create_transaction(serializer.validated_data)
 
 
 class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsTransactionOnwer]
     lookup_field = 'pk'
 
     def get_queryset(self):
@@ -54,7 +54,8 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
             'category',
             'subcategory',
             'recurring_root',
-            'transfer_root',
+            'transfer_root'
+        ).prefetch_related(
             'transfer_root__original_account',
             'transfer_root__account_transferred'
         )

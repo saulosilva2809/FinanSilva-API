@@ -8,6 +8,7 @@ from apps.transaction.serializers import (
     ListTransferSerializer,
 )
 from apps.transaction.services import TransferService
+from apps.transaction.permissions import IsTransferOnwer
 
 
 class TransferListCreateView(generics.ListCreateAPIView):
@@ -17,7 +18,13 @@ class TransferListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         q1 = TransferModel.objects.filter(original_account__user=self.request.user)
         q2 = TransferModel.objects.filter(account_transferred__user=self.request.user)
-        transfers = q1.union(q2).order_by('-created_at')
+
+        transfers = q1.union(q2).order_by('-created_at').prefetch_related(
+            'original_account', 
+            'account_transferred', 
+            'category', 
+            'subcategory'
+        )
 
         return transfers
 
@@ -27,18 +34,23 @@ class TransferListCreateView(generics.ListCreateAPIView):
         return ListTransferSerializer
     
     def perform_create(self, serializer):
-        instance = serializer.save()
-        TransferService.create_transaction_from_transfer(instance)
+        TransferService.create_transfer(serializer.validated_data)
 
 
 class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsTransferOnwer]
     lookup_field = 'pk'
 
     def get_queryset(self):
         q1 = TransferModel.objects.filter(original_account__user=self.request.user)
         q2 = TransferModel.objects.filter(account_transferred__user=self.request.user)
-        transfers = q1.union(q2).order_by('-created_at')
+
+        transfers = q1.union(q2).order_by('-created_at').prefetch_related(
+            'original_account', 
+            'account_transferred', 
+            'category', 
+            'subcategory'
+        )
 
         return transfers
 
