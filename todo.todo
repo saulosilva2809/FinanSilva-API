@@ -1,6 +1,6 @@
 # TODO: implementar módulo de cartão de crédito
 # TODO: suporte para contas com moedas diferentes
 # TODO: endpoint para transformar transaction em recurring_transaction
-# TODO: otimizar queries com select_related e prefetch_related
-# TODO: otimizar 'get_queryset' das views com select_related e prefetch_related
-# TODO: definir envio de email em certas ações (definir end to end)
+# TODO: testar todas as views com o debug_toolbar (verificar perfomance)
+# TODO: sistema de metas
+# TODO: limpar todas as models que usam Fk para usar Str e não a model explícita
