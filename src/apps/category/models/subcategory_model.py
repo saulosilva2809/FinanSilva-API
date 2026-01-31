@@ -1,11 +1,10 @@
 from django.db import models
 
 from apps.base.models import BaseModel
-from apps.category.models import CategoryModel
 
 
 class SubCategoryModel(BaseModel):
-    category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, related_name='sub_categories')
+    category = models.ForeignKey('category.CategoryModel', on_delete=models.CASCADE, related_name='sub_categories')
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True)
 

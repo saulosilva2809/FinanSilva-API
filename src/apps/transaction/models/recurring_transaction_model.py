@@ -4,21 +4,19 @@ from django.db import models
 from django.utils.timezone import now, make_aware, is_naive
 
 from .choices import NextRunDateChoices, TypeTransactionChoices
-from apps.account.models import AccountModel
 from apps.base.models import BaseModel
-from apps.category.models import CategoryModel, SubCategoryModel
 
 
 class RecurringTransactionModel(BaseModel):
-    account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='recurring_transactions')
+    account = models.ForeignKey('account.AccountModel', on_delete=models.CASCADE, related_name='recurring_transactions')
     value = models.DecimalField(max_digits=10, decimal_places=2)
     type_transaction = models.CharField(choices=TypeTransactionChoices.choices, default='')
     description = models.CharField(max_length=255)
     frequency = models.CharField(choices=NextRunDateChoices, max_length=50)
     next_run_date = models.DateTimeField(null=True, blank=True)
     active = models.BooleanField(default=True)
-    category = models.ForeignKey(CategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
-    subcategory = models.ForeignKey(SubCategoryModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
+    category = models.ForeignKey('category.CategoryModel', null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
+    subcategory = models.ForeignKey('category.SubCategoryModel', null=True, blank=True, on_delete=models.SET_NULL, related_name='recurring_transactions')
     init_date = models.DateTimeField(null=True, blank=True)
     executed_first_time = models.BooleanField(default=False) # se já foi processada alguma vez
     executed_last_time = models.DateTimeField(null=True, blank=True)

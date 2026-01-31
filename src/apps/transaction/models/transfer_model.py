@@ -2,9 +2,7 @@ import uuid
 
 from django.db import models
 
-from apps.account.models import AccountModel
 from apps.base.models import BaseModel
-from apps.category.models import CategoryModel, SubCategoryModel
 
 
 class TransferModel(BaseModel):
@@ -14,19 +12,19 @@ class TransferModel(BaseModel):
         editable=False
     )
     processed = models.BooleanField(default=False)
-    original_account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='transfers_sent')
-    account_transferred = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name='transfers_received')
+    original_account = models.ForeignKey('account.AccountModel', on_delete=models.CASCADE, related_name='transfers_sent')
+    account_transferred = models.ForeignKey('account.AccountModel', on_delete=models.CASCADE, related_name='transfers_received')
     value = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(
-        CategoryModel,
+        'category.CategoryModel',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
         related_name='transfers'
     )
     subcategory = models.ForeignKey(
-        SubCategoryModel,
+        'category.SubCategoryModel',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
