@@ -82,3 +82,7 @@ class RecurringTransactionModel(BaseModel):
         verbose_name = "Transação Recorrente"
         verbose_name_plural = "Transações Recorrentes"
         ordering = ["-created_at"]
+
+        indexes = [
+            models.Index(fields=['account', 'active', '-created_at'])
+        ]

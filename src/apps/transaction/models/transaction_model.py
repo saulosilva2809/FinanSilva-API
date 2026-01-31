@@ -53,3 +53,8 @@ class TransactionModel(BaseModel):
         verbose_name = "Transação"
         verbose_name_plural = "Transações"
         ordering = ["-created_at"]
+
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['type_transaction', '-created_at'])
+        ]

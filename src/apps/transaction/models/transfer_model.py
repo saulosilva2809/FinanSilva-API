@@ -37,3 +37,8 @@ class TransferModel(BaseModel):
         verbose_name = "Transferência"
         verbose_name_plural = "Transferências"
         ordering = ["-created_at"]
+
+        indexes = [
+            models.Index(fields=['original_account', '-created_at']),
+            models.Index(fields=['account_transferred', '-created_at'])
+        ]
