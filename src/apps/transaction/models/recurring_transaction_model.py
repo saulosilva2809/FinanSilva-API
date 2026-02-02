@@ -11,7 +11,7 @@ class RecurringTransactionModel(BaseModel):
     account = models.ForeignKey('account.AccountModel', on_delete=models.CASCADE, related_name='recurring_transactions')
     value = models.DecimalField(max_digits=10, decimal_places=2)
     type_transaction = models.CharField(choices=TypeTransactionChoices.choices, default='')
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, null=True, blank=True)
     frequency = models.CharField(choices=NextRunDateChoices, max_length=50)
     next_run_date = models.DateTimeField(null=True, blank=True)
     active = models.BooleanField(default=True)
