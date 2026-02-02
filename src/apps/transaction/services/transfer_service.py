@@ -98,17 +98,17 @@ class TransferService:
     @staticmethod
     @django_transaction.atomic
     def delete_transfer(instance: TransferModel):
-        with django_transaction.atomic:
+        with django_transaction.atomic():
             # pegando e bloqueando as contas com o .select_for_update()
             original_account = (
                 instance.original_account.__class__.objects
                 .select_for_update()
-                .get(pk=instance.original_account)
+                .get(pk=instance.original_account.id)
             )
             account_transferred = (
                 instance.original_account.__class__.objects
                 .select_for_update()
-                .get(pk=instance.account_transferred)
+                .get(pk=instance.account_transferred.id)
             )
 
             # deletando as transactions

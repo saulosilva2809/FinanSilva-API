@@ -30,8 +30,9 @@ class TransferAdmin(admin.ModelAdmin):
     list_display = ('created_at', 'updated_at', 'original_account', 'account_transferred', 'value', 'category', 'subcategory')
 
     def delete_queryset(self, request, queryset):
-        for obj in queryset:
-            TransferService.delete_transfer(obj)
+        with transaction.atomic():
+            for obj in queryset:
+                TransferService.delete_transfer(obj)
 
     def delete_model(self, request, obj):
         TransferService.delete_transfer(obj)
