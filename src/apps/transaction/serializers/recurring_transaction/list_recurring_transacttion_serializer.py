@@ -24,8 +24,10 @@ class ListRecurringTransactionSerializer(serializers.ModelSerializer):
             'id',
             'value',
             'type_transaction',
+            'frequency',
             'next_run_date',
             'active',
+            'init_date',
             'account',
             'category',
             'subcategory'
