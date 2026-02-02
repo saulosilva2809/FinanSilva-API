@@ -21,6 +21,12 @@ class RecurringTransactionModel(BaseModel):
     executed_first_time = models.BooleanField(default=False) # se já foi processada alguma vez
     executed_last_time = models.DateTimeField(null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        if not self.init_date:
+            self.init_date = now()
+    
+        return super().save(*args, **kwargs)
+
     def set_next_run_date(self):
         frequency_dict = {
             NextRunDateChoices.DAILY: {'time': 'days', 'value': 1},
@@ -35,7 +41,7 @@ class RecurringTransactionModel(BaseModel):
 
         config = frequency_dict[self.frequency]
 
-        base = self.executed_last_time if self.executed_first_time else now()
+        base = self.executed_last_time if self.executed_first_time else self.init_date
 
         if config['time'] in ('days', 'weeks'):
             delta = timedelta(**{config['time']: config['value']})
@@ -69,12 +75,6 @@ class RecurringTransactionModel(BaseModel):
             delta = relativedelta(**{config['time']: config['value']})
         
         return base_date + delta
-        
-    def save(self, *args, **kwargs):
-        if not self.init_date:
-            self.init_date = now()
-    
-        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Transação Recorrente"
