@@ -34,27 +34,26 @@ class RecurringTransactionService:
                 processed=False
             )
 
-            TransactionService.update_balance_account(transaction)
+        except IntegrityError:
+            return TransactionModel.objects.get(idempotency_key=transaction.idempotency_key)
 
-            was_already_executed = instance.executed_first_time
+        TransactionService.update_balance_account(transaction, account)
 
-            # marca a recorrente como processada na primeira execução
-            instance.executed_first_time = True
-            instance.executed_last_time = timezone.now()
-            instance.save()
+        was_already_executed = instance.executed_first_time
 
-            django_transaction.on_commit(
-                lambda: RecurringTransactionService.send_email_when_recurring_transaction_process(
+        # marca a recorrente como processada na primeira execução
+        instance.executed_first_time = True
+        instance.executed_last_time = timezone.now()
+        instance.save()
+
+        django_transaction.on_commit(
+            lambda: RecurringTransactionService.send_email_when_recurring_transaction_process(
                     instance,
                     was_already_executed
-                )
             )
+        )
 
-            return transaction
-
-        except IntegrityError:
-            # idempotency_key repetida → retorna a transação já criada
-            return TransactionModel.objects.get(idempotency_key=transaction.idempotency_key)
+        return transaction
         
     @staticmethod
     @django_transaction.atomic
