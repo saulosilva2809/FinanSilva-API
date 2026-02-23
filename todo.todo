@@ -1,5 +1,5 @@
 # TODO: implementar módulo de cartão de crédito
 # TODO: suporte para contas com moedas diferentes
-# TODO: endpoint para transformar transaction em recurring_transaction
 # TODO: testar todas as views com o debug_toolbar (verificar perfomance)
 # TODO: sistema de metas
+# TODO: criar selectors

@@ -1,27 +1,33 @@
-services:
-  db:
-    image: postgres:17-alpine
-    container_name: finansilva_db
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-finansilva}
-      POSTGRES_USER: ${POSTGRES_USER:-finansilva}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finansilva123}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finansilva} -d ${POSTGRES_DB:-finansilva}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+version: "3.9"
 
+services:
+
+  # =========================
+  # MIGRATIONS (RODA UMA VEZ)
+  # =========================
+  migrate:
+    build: .
+    container_name: finansilva_migrate
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      PYTHONUNBUFFERED: "1"
+    working_dir: /app/src
+    volumes:
+      - ./src:/app/src
+    entrypoint: /entrypoint.migrate.sh
+    command: python manage.py migrate --noinput
+
+  # =========================
+  # DJANGO WEB
+  # =========================
   web:
     build: .
     container_name: finansilva_web
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_started
     env_file:
@@ -34,17 +40,20 @@ services:
       - ./src:/app/src
     ports:
       - "8000:8000"
-    entrypoint: /entrypoint.migrate.sh
+    entrypoint: /entrypoint.no-migrate.sh
     command: python manage.py runserver 0.0.0.0:8000
 
+  # =========================
+  # CELERY WORKER
+  # =========================
   celery:
     build: .
     container_name: finansilva_celery
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -56,14 +65,17 @@ services:
     entrypoint: /entrypoint.no-migrate.sh
     command: celery -A core worker -l info
 
+  # =========================
+  # CELERY BEAT
+  # =========================
   beat:
     build: .
     container_name: finansilva_celery_beat
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -75,14 +87,17 @@ services:
     entrypoint: /entrypoint.no-migrate.sh
     command: celery -A core beat -l info
 
+  # =========================
+  # FLOWER
+  # =========================
   flower:
     build: .
     container_name: finansilva_flower
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -95,6 +110,9 @@ services:
     entrypoint: /entrypoint.no-migrate.sh
     command: celery -A core flower --port=5555
 
+  # =========================
+  # REDIS
+  # =========================
   redis:
     image: redis:7-alpine
     container_name: finansilva_redis
@@ -104,6 +122,3 @@ services:
 networks:
   default:
     name: finansilva_net
-
-volumes:
-  postgres_data:
