@@ -40,14 +40,14 @@ class DashboardMetrics():
 
 
     def _filter_transactions(self):
-        filters = {"account_id__in": self.account_ids}
+        filters = {'account_id__in': self.account_ids}
         filters['transfer_root__isnull'] = True
 
         if self.start_date:
-            filters["created_at__gte"] = self.start_date
+            filters['created_at__gte'] = self.start_date
 
         if self.end_date:
-            filters["created_at__lte"] = self.end_date
+            filters['created_at__lte'] = self.end_date
 
         if self.category:
             filters['category'] = self.category
@@ -76,8 +76,8 @@ class DashboardMetrics():
         from apps.account.models import AccountModel
 
         stats = AccountModel.objects.filter(id__in=self.account_ids).aggregate(
-            total_balance=Sum("balance"),
-            total_saved=Sum("balance", filter=Q(type_account__in=[
+            total_balance=Sum('balance'),
+            total_saved=Sum('balance', filter=Q(type_account__in=[
                 TypeAccountChoices.INVESTMENT, 
                 TypeAccountChoices.SAVINGS
             ]))
@@ -91,10 +91,10 @@ class DashboardMetrics():
     def values_by_category(self):
         categories_qs = (
             self.transactions
-            .values("category__id", "category__name")
+            .values('category__id', 'category__name')
             .annotate(
-                income=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
-                expense=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
+                income=Sum('value', filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
+                expense=Sum('value', filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
             )
             .filter(Q(income__gt=0) | Q(expense__gt=0))
         )
@@ -103,33 +103,33 @@ class DashboardMetrics():
         expense_list = []
 
         for item in categories_qs:
-            if item["income"] and item["income"] > 0:
+            if item['income'] and item['income'] > 0:
                 income_list.append({
-                    'category': {'id': item["category__id"], 'name': item["category__name"]},
-                    'value': item["income"]
+                    'category': {'id': item['category__id'], 'name': item['category__name']},
+                    'value': item['income']
                 })
 
-            if item["expense"] and item["expense"] > 0:
+            if item['expense'] and item['expense'] > 0:
                 expense_list.append({
-                    'category': {'id': item["category__id"], 'name': item["category__name"]},
-                    'value': item["expense"]
+                    'category': {'id': item['category__id'], 'name': item['category__name']},
+                    'value': item['expense']
                 })
 
         return {
-            "income_by_category": income_list,
-            "expenses_by_category": expense_list
+            'income_by_category': income_list,
+            'expenses_by_category': expense_list
         }
 
     def get_monthly_summary(self):
         summary_qs = (
             self.transactions
-            .annotate(month=TruncMonth("created_at"))
-            .values("month")
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
             .annotate(
-                total_recipes=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
-                total_expenses=Sum("value", filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
+                total_recipes=Sum('value', filter=Q(type_transaction=TypeTransactionChoices.RECIPE)),
+                total_expenses=Sum('value', filter=Q(type_transaction=TypeTransactionChoices.EXPENSE))
             )
-            .order_by("month")
+            .order_by('month')
         )
 
         transfers_qs = (
@@ -137,18 +137,18 @@ class DashboardMetrics():
                 Q(original_account_id__in=self.account_ids) |
                 Q(account_transferred_id__in=self.account_ids)
             )
-            .annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(total=Sum("value"))
-            .order_by("month")
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(total=Sum('value'))
+            .order_by('month')
         )
 
         summary = {}
         
         for item in summary_qs:
-            month_str = item["month"].strftime("%Y-%m")
-            recipes = item["total_recipes"] or 0
-            expenses = item["total_expenses"] or 0
+            month_str = item['month'].strftime('%Y-%m')
+            recipes = item['total_recipes'] or 0
+            expenses = item['total_expenses'] or 0
             summary[month_str] = {
                 'recipes': recipes,
                 'expenses': expenses,
@@ -157,8 +157,8 @@ class DashboardMetrics():
             }
 
         for item in transfers_qs:
-            month_str = item["month"].strftime("%Y-%m")
-            total_transfer = item["total"] or 0.0
+            month_str = item['month'].strftime('%Y-%m')
+            total_transfer = item['total'] or 0.0
             if month_str in summary:
                 summary[month_str]['transfers'] = total_transfer
             else:
@@ -179,21 +179,21 @@ class DashboardMetrics():
 
         return [
             {
-                "id": transaction['id'],
-                "value": float(transaction['value']),
-                "type_transaction": transaction['type_transaction'],
-                "created_at": transaction['created_at'],
-                "account": {
-                    "id": transaction['account__id'],
-                    "name": transaction['account__name'],
+                'id': transaction['id'],
+                'value': float(transaction['value']),
+                'type_transaction': transaction['type_transaction'],
+                'created_at': transaction['created_at'],
+                'account': {
+                    'id': transaction['account__id'],
+                    'name': transaction['account__name'],
                 },
-                "category": {
-                    "id": transaction['category__id'],
-                    "name": transaction['category__name'],
+                'category': {
+                    'id': transaction['category__id'],
+                    'name': transaction['category__name'],
                 } if transaction['category__id'] else None,
-                "subcategory": {
-                    "id": transaction['subcategory__id'],
-                    "name": transaction['subcategory__name'],
+                'subcategory': {
+                    'id': transaction['subcategory__id'],
+                    'name': transaction['subcategory__name'],
                 } if transaction['subcategory__id'] else None,
             }
             for transaction in raw_data
@@ -218,17 +218,17 @@ class DashboardMetrics():
                 'frequency': rec_transaction['frequency'],
                 'next_run_date': timezone.localtime(rec_transaction['next_run_date']),
                 'init_date': timezone.localtime(rec_transaction['init_date']),
-                "account": {
-                    "id": rec_transaction['account__id'],
-                    "name": rec_transaction['account__name'],
+                'account': {
+                    'id': rec_transaction['account__id'],
+                    'name': rec_transaction['account__name'],
                 },
-                "category": {
-                    "id": rec_transaction['category__id'],
-                    "name": rec_transaction['category__name'],
+                'category': {
+                    'id': rec_transaction['category__id'],
+                    'name': rec_transaction['category__name'],
                 } if rec_transaction['category__id'] else None,
-                "subcategory": {
-                    "id": rec_transaction['subcategory__id'],
-                    "name": rec_transaction['subcategory__name'],
+                'subcategory': {
+                    'id': rec_transaction['subcategory__id'],
+                    'name': rec_transaction['subcategory__name'],
                 } if rec_transaction['subcategory__id'] else None,
             }
             for rec_transaction in raw_data
@@ -286,12 +286,12 @@ class DashboardMetrics():
         return response
 
     def get_cached_dashboard(self):
-        # pega a Query String bruta da URL (ex: "account_name=oi&category=1")
+        # pega a Query String bruta da URL (ex: 'account_name=oi&category=1')
         query_params = self.request.GET.urlencode()
         # cria uma hash curta para a chave não ficar gigante e dar erro
         query_hash = hashlib.md5(query_params.encode()).hexdigest()
 
-        cache_key = f"user_dashboard_{self.request.user.id}_{query_hash}"
+        cache_key = f'user_dashboard_{self.request.user.id}_{query_hash}'
         index_key = f'user_dashboard_index_{self.request.user.id}'
         
         data = cache.get(cache_key)
@@ -304,8 +304,8 @@ class DashboardMetrics():
             keys_list.add(cache_key)
             cache.set(index_key, keys_list, 3600)
 
-            logger.info(f"Pegando dados via BD (Filtros: {query_params})")
+            logger.info(f'Pegando dados via BD (Filtros: {query_params})')
         else:
-            logger.info("Pegando dados via CACHE")
+            logger.info('Pegando dados via CACHE')
                 
         return data
