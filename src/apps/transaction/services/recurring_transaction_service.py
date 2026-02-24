@@ -4,11 +4,12 @@ from django.db import IntegrityError, transaction as django_transaction
 from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 
-from apps.account.models import AccountModel
+from apps.account.selector import AccountSelector
 from apps.transaction.email_messages import (
     message_recurring_transaction_created,
     message_recurring_transaction_success
 )
+from apps.transaction.selectors import TransactionSelector
 from apps.transaction.models import RecurringTransactionModel, TransactionModel
 
 
@@ -18,8 +19,7 @@ class RecurringTransactionService:
     def create_transaction_from_recurring_transaction(instance: RecurringTransactionModel):
         from apps.transaction.services import TransactionService
         try:
-            # bloqueia a conta
-            account = AccountModel.objects.select_for_update().get(id=instance.account_id)
+            account = AccountSelector.get_account_by_id(instance.account_id)
 
             # cria a transação real
             transaction = TransactionModel.objects.create(
@@ -35,7 +35,7 @@ class RecurringTransactionService:
             )
 
         except IntegrityError:
-            return TransactionModel.objects.get(idempotency_key=transaction.idempotency_key)
+            return TransactionSelector.get_transaction_by_idempotency_key(transaction.idempotency_key)
 
         TransactionService.update_balance_account(transaction, account)
 

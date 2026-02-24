@@ -4,7 +4,9 @@ from django.db import IntegrityError, transaction as django_transaction
 from rest_framework.exceptions import ValidationError
 
 from apps.account.models import AccountModel
+from apps.account.selector import AccountSelector
 from apps.transaction.email_messages import message_transaction_converted_to_recurring
+from apps.transaction.selectors import TransactionSelector
 from apps.transaction.models import TransactionModel, RecurringTransactionModel
 from apps.transaction.models.choices import TypeTransactionChoices
 
@@ -15,9 +17,7 @@ class TransactionService:
     @staticmethod
     @django_transaction.atomic
     def create_transaction(data):
-        account = AccountModel.objects.select_for_update().get(
-            id=data['account'].id
-        )
+        account = AccountSelector.get_account_by_id(data['account'].id)
 
         if data['type_transaction'] == TypeTransactionChoices.EXPENSE:
             if data['value'] > account.balance:
@@ -32,7 +32,7 @@ class TransactionService:
     @django_transaction.atomic
     def create_recurring_transaction_from_transaction(data):
         account = data['account'] 
-        account_locked = AccountModel.objects.select_for_update().get(id=account.id)
+        account_locked = AccountSelector.get_account_by_id(account.id)
 
         # cria a transação real
         transaction = RecurringTransactionModel.objects.create(
@@ -60,7 +60,7 @@ class TransactionService:
     def update_balance_account(instance: TransactionModel, account: AccountModel):
         try:
             if not account:
-                account = AccountModel.objects.select_for_update().get(id=instance.account_id)
+                account = AccountSelector.get_account_by_id(instance.account_id)
 
             if instance.processed:
                 return
@@ -79,18 +79,12 @@ class TransactionService:
 
         except IntegrityError:
             # idempotency_key repetida → retorna a transação original
-            return TransactionModel.objects.get(
-                idempotency_key=instance.idempotency_key
-            )
+            return TransactionSelector.get_transaction_by_idempotency_key(instance.idempotency_key)
         
     @staticmethod
     @django_transaction.atomic
     def update_transaction(old_instance, new_instance):
-        account = (
-            AccountModel.objects
-            .select_for_update()
-            .get(id=new_instance.account_id)
-        )
+        account = AccountSelector.get_account_by_id(id=new_instance.account_id)
 
         old_value = old_instance.value
         new_value = new_instance.value
@@ -115,7 +109,7 @@ class TransactionService:
     @staticmethod
     @django_transaction.atomic
     def delete_transaction(instance: TransactionModel):
-        account = AccountModel.objects.select_for_update().get(id=instance.account.id)
+        account = AccountSelector.get_account_by_id(id=instance.account.id)
 
         if instance.type_transaction == TypeTransactionChoices.RECIPE:
             account.balance -= instance.value

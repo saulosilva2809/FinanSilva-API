@@ -2,6 +2,7 @@ from django.db import IntegrityError, transaction as django_transaction
 from django.utils import timezone
 from rest_framework.serializers import ValidationError
 
+from apps.account.selector import AccountSelector
 from apps.account.models import AccountModel
 from apps.transaction.email_messages import (
     message_transfer_completed,
@@ -49,15 +50,17 @@ class TransferService:
         try:
             # bloqueia a conta
             if not original_account:
-                original_account = AccountModel.objects.select_for_update().get(id=instance.original_account.id)
+                original_account = AccountSelector.get_account_by_id(id=instance.original_account.id)
             if not account_transferred:
-                account_transferred = AccountModel.objects.select_for_update().get(id=instance.account_transferred.id)
+                account_transferred = AccountSelector.get_account_by_id(id=instance.account_transferred.id)
 
             if instance.processed:
                 return
             
             # setar try/except
             # primeira transação (da conta que enviou o dinheiro)
+
+            # TODO: usar create_transaction do TransactionService
             first_transaction = TransactionModel.objects.create(
                 account=original_account,
                 value=instance.value,
@@ -98,32 +101,31 @@ class TransferService:
     @staticmethod
     @django_transaction.atomic
     def delete_transfer(instance: TransferModel):
-        with django_transaction.atomic():
-            # pegando e bloqueando as contas com o .select_for_update()
-            original_account = (
-                instance.original_account.__class__.objects
-                .select_for_update()
-                .get(pk=instance.original_account.id)
-            )
-            account_transferred = (
-                instance.original_account.__class__.objects
-                .select_for_update()
-                .get(pk=instance.account_transferred.id)
-            )
+        # pegando e bloqueando as contas com o .select_for_update()
+        original_account = (
+            instance.original_account.__class__.objects
+            .select_for_update()
+            .get(pk=instance.original_account.id)
+        )
+        account_transferred = (
+            instance.original_account.__class__.objects
+            .select_for_update()
+            .get(pk=instance.account_transferred.id)
+        )
 
-            # deletando as transactions
-            TransactionModel.objects.filter(transfer_root=instance).delete()
+        # deletando as transactions
+        TransactionModel.objects.filter(transfer_root=instance).delete()
 
-            # atualizando o saldo das contas
-            original_account.balance += instance.value
-            account_transferred.balance -= instance.value
+        # atualizando o saldo das contas
+        original_account.balance += instance.value
+        account_transferred.balance -= instance.value
 
-            # salvando as alterações
-            original_account.save()
-            account_transferred.save()
+        # salvando as alterações
+        original_account.save()
+        account_transferred.save()
 
-            # deletando a transfer
-            instance.delete()
+        # deletando a transfer
+        instance.delete()
 
     @staticmethod
     def send_email_when_transfer_created(instance: TransferModel):

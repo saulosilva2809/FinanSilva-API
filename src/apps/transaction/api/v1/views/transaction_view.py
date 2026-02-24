@@ -9,30 +9,19 @@ from apps.transaction.api.v1.serializers import (
     ListTransactionSerializer,
 )
 from apps.transaction.filters import TransactionFilter
-from apps.transaction.models import TransactionModel
+from apps.transaction.selectors import TransactionSelector
 from apps.transaction.services import TransactionService
 from apps.transaction.permissions import IsTransactionOnwer
 
 
 class TransactionListCreateView(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsTransactionOnwer]
     pagination_class = PaginationAPI
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 
     def get_queryset(self):
-        return TransactionModel.objects.filter(
-            account__user=self.request.user
-        ).select_related(
-            'account',
-            'category',
-            'subcategory',
-            'recurring_root',
-            'transfer_root'
-        ).prefetch_related(
-            'transfer_root__original_account',
-            'transfer_root__account_transferred'
-        )
+        return TransactionSelector.get_transactions_by_account_owner(self.request.user)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -48,18 +37,7 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return TransactionModel.objects.filter(
-            account__user=self.request.user
-        ).select_related(
-            'account',
-            'category',
-            'subcategory',
-            'recurring_root',
-            'transfer_root'
-        ).prefetch_related(
-            'transfer_root__original_account',
-            'transfer_root__account_transferred'
-        )
+        return TransactionSelector.get_transactions_by_account_owner(self.request.user)
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -79,24 +57,14 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         )
 
 
+# TODO: criar service para esse endpoint
 class ConvertTransactionInRecurringTransactionView(generics.GenericAPIView):
     permissions = [permissions.IsAuthenticated, IsTransactionOnwer]
     serializer_class = CreateUpdateRecurringTransactionSerializer
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return TransactionModel.objects.filter(
-            account__user=self.request.user
-        ).select_related(
-            'account',
-            'category',
-            'subcategory',
-            'recurring_root',
-            'transfer_root'
-        ).prefetch_related(
-            'transfer_root__original_account',
-            'transfer_root__account_transferred'
-        )
+        return TransactionSelector.get_transactions_by_account_owner(self.request.user)
     
     def post(self, request, *args, **kwargs):
         transaction = self.get_object()
