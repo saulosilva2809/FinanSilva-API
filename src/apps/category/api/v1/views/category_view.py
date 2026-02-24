@@ -2,13 +2,13 @@ from rest_framework import generics, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.base.pagination import PaginationAPI
-from apps.category.filters import CategoryFilter
-from apps.category.models import CategoryModel
-from apps.category.serializers import (
+from apps.category.api.v1.serializers import (
     DetailCategorySerializer,
     CreateUpdateCategorySerializer,
     ListCategorySerializer,
 )
+from apps.category.filters import CategoryFilter
+from apps.category.models import CategoryModel
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):

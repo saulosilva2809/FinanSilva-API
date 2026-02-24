@@ -1,8 +1,6 @@
-from django.urls import path
-from .views import AccountListCreateView, AccountRetrieveUpdateDestroyView
+from django.urls import path, include
 
 
 urlpatterns = [
-    path('account/', AccountListCreateView.as_view(), name='account_list_create'),
-    path('account/<uuid:pk>', AccountRetrieveUpdateDestroyView.as_view(), name='account_retrieve_update_destroy'),
+    path('v1/', include('apps.account.api.v1.urls'))
 ]

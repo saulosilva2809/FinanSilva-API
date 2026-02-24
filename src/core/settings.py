@@ -144,7 +144,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery configuration
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/1')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -173,49 +173,49 @@ SIMPLE_JWT = {
 }
 
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "dev": {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'dev': {
             # Formato profissional: [NÍVEL] Nome.do.Modulo: Mensagem
-            "format": "[%(levelname)s] %(name)s: %(message)s",
+            'format': '[%(levelname)s] %(name)s: %(message)s',
         },
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
-            "formatter": "dev",
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
         },
     },
-    "loggers": {
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'dev',
+        },
+    },
+    'loggers': {
         # ROOT LOGGER: Captura TUDO que não tiver um logger específico
-        "": {
-            "handlers": ["console"],
-            "level": "INFO",
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
         },
         # Logs do Django (INFO para ver as requisições no terminal)
-        "django": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
         },
         # Logs do seu projeto (DEBUG para ver tudo enquanto desenvolve)
-        "apps": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
+        'apps': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
         # Evita logs excessivos de bibliotecas como o PIL ou requests
-        "urllib3": {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": False,
+        'urllib3': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
         },
     },
 }
@@ -233,7 +233,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 if DEBUG:
     import socket
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+    INTERNAL_IPS = [ip[:-1] + '1' for ip in ips] + ['127.0.0.1', '10.0.2.2']
 
 # Configurações do Django QueryCount
 QUERYCOUNT = {

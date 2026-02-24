@@ -1,12 +1,12 @@
 from rest_framework import generics, permissions
 
 from apps.base.pagination import PaginationAPI
-from apps.transaction.models import TransferModel
-from apps.transaction.serializers import (
+from apps.transaction.api.v1.serializers import (
     CreateUpdateTransferSerializer,
     DetailTransferSerializer,
     ListTransferSerializer,
 )
+from apps.transaction.models import TransferModel
 from apps.transaction.services import TransferService
 from apps.transaction.permissions import IsTransferOnwer
 

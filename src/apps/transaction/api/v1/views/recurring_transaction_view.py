@@ -6,15 +6,15 @@ from rest_framework.response import Response
 
 from apps.base.tasks import approve_recurring_transaction
 from apps.base.pagination import PaginationAPI
-from apps.transaction.filters import RecurringTransactionFilter
-from apps.transaction.models import RecurringTransactionModel
-from apps.transaction.serializers import (
+from apps.transaction.api.v1.serializers import (
     CreateUpdateRecurringTransactionSerializer,
     DetailRecurringTransactionSerializer,
     ListRecurringTransactionSerializer,
     SimulateApprovalInputSerializer,
     SimulateApprovalOutputSerializer,
 )
+from apps.transaction.filters import RecurringTransactionFilter
+from apps.transaction.models import RecurringTransactionModel
 from apps.transaction.services import RecurringTransactionService
 from apps.transaction.permissions import IsTransactionOnwer
 

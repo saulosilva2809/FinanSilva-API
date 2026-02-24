@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 
+from apps.authentication.api.v1.serializers import RegisterSerializer
 from apps.authentication.models import UserModel
-from apps.authentication.serializers import RegisterSerializer
 from apps.authentication.services import UserService
 
 

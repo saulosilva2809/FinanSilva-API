@@ -1,13 +1,13 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
 
-from apps.account.filters import AccountFilter
-from apps.account.models import AccountModel
-from apps.account.serializers import (
+from apps.account.api.v1.serializers import (
     CreateAccountSerializer,
     UpdateAccountSerializer,
     ViewAccountSerializer
 )
+from apps.account.filters import AccountFilter
+from apps.account.models import AccountModel
 from apps.account.services import AccountService
 from apps.base.pagination import PaginationAPI
 

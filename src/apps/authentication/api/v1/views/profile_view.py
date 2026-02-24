@@ -1,6 +1,9 @@
 from rest_framework import generics, permissions
 
-from apps.authentication.serializers import UpdateProfileSerializer, ViewProfileSerializer
+from apps.authentication.api.v1.serializers import (
+    UpdateProfileSerializer,
+    ViewProfileSerializer
+)
 from apps.authentication.services import UserService
 
 

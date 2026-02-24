@@ -1,10 +1,6 @@
-from django.urls import path
-
-from .views import (
-    DashboardView
-)
+from django.urls import path, include
 
 
 urlpatterns = [
-    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('v1/', include('apps.base.api.v1.urls')),
 ]
