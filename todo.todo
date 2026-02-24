@@ -2,5 +2,3 @@
 # TODO: suporte para contas com moedas diferentes
 # TODO: testar todas as views com o debug_toolbar (verificar perfomance)
 # TODO: sistema de metas
-# TODO: criar selectors
-# TODO: estruturar versionamento

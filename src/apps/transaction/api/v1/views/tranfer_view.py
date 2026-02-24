@@ -6,7 +6,7 @@ from apps.transaction.api.v1.serializers import (
     DetailTransferSerializer,
     ListTransferSerializer,
 )
-from apps.transaction.models import TransferModel
+from apps.transaction.selectors import TransferSelector
 from apps.transaction.services import TransferService
 from apps.transaction.permissions import IsTransferOnwer
 
@@ -16,17 +16,7 @@ class TransferListCreateView(generics.ListCreateAPIView):
     pagination_class = PaginationAPI
 
     def get_queryset(self):
-        q1 = TransferModel.objects.filter(original_account__user=self.request.user)
-        q2 = TransferModel.objects.filter(account_transferred__user=self.request.user)
-
-        transfers = q1.union(q2).order_by('-created_at').prefetch_related(
-            'original_account', 
-            'account_transferred', 
-            'category', 
-            'subcategory'
-        )
-
-        return transfers
+        return TransferSelector.get_transfers_by_user(self.request.user)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -42,17 +32,7 @@ class TransferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
     def get_queryset(self):
-        q1 = TransferModel.objects.filter(original_account__user=self.request.user)
-        q2 = TransferModel.objects.filter(account_transferred__user=self.request.user)
-
-        transfers = q1.union(q2).order_by('-created_at').prefetch_related(
-            'original_account', 
-            'account_transferred', 
-            'category', 
-            'subcategory'
-        )
-
-        return transfers
+        return TransferSelector.get_transfers_by_user(self.request.user)
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

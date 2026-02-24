@@ -1,1 +1,2 @@
 from .transaction_selector import TransactionSelector
+from .transfer_selector import TransferSelector
