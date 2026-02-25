@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
 
+    # DOCUMENTAÇÂO
+    'drf_spectacular',
+
     # APPS
     'apps.account',
     'apps.authentication',
@@ -160,8 +163,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     
+    # PAGINATION
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+
+    # DOCUMENTATION
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -250,4 +257,10 @@ QUERYCOUNT = {
     ],
     'IGNORE_REQUEST_METHODS': ['OPTIONS'], # Ignora requisições de pre-flight do CORS
     'DISPLAY_DUPLICATES': True,            # MUITO IMPORTANTE: mostra se você repetiu a mesma query
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'FinanSilva API',
+    'DESCRIPTION': 'Documentação da API do sistema financeiro',
+    'VERSION': 'Current',
 }
