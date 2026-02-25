@@ -7,7 +7,6 @@ from apps.account.api.v1.serializers import (
     ViewAccountSerializer
 )
 from apps.account.filters import AccountFilter
-from apps.account.models import AccountModel
 from apps.account.selector import AccountSelector
 from apps.account.services import AccountService
 from apps.base.pagination import PaginationAPI
@@ -20,7 +19,7 @@ class AccountListCreateView(generics.ListCreateAPIView):
     filterset_class = AccountFilter
 
     def get_queryset(self):
-        return AccountSelector.get_accounts_by_user(self.request.user)
+        return AccountSelector.get_accounts_by_user(self, self.request.user)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -37,7 +36,7 @@ class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return AccountSelector.get_accounts_by_user(self.request.user)
+        return AccountSelector.get_accounts_by_user(self, self.request.user)
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

@@ -5,8 +5,10 @@ from apps.account.api.v1.views import (
     AccountRetrieveUpdateDestroyView
 )
 
+from .docs import schemas
+
 
 urlpatterns = [
-    path('account/', AccountListCreateView.as_view(), name='account_list_create'),
-    path('account/<uuid:pk>', AccountRetrieveUpdateDestroyView.as_view(), name='account_retrieve_update_destroy'),
+    path('', AccountListCreateView.as_view(), name='account_list_create'),
+    path('<uuid:pk>', AccountRetrieveUpdateDestroyView.as_view(), name='account_retrieve_update_destroy'),
 ]
