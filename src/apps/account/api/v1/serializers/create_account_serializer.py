@@ -8,7 +8,7 @@ class CreateAccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
-        fields = ('id', 'name', 'bank', 'type_account', 'description', 'initial_balance', 'balance')
+        fields = ('id', 'name', 'bank', 'type_account', 'description', 'initial_balance', 'balance', 'created_at')
 
     def validate_initial_balance(self, value):
         if value < 0:
