@@ -278,4 +278,8 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'FinanSilva API',
     'DESCRIPTION': 'Documentação da API do sistema financeiro',
     'VERSION': 'Current',
+
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
 }

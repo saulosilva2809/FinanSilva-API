@@ -7,7 +7,10 @@ from apps.authentication.models import UserModel
 
 class AccountSelector:
     @staticmethod
-    def get_accounts_by_user(user: UserModel) -> QuerySet[AccountModel]:
+    def get_accounts_by_user(view_instance, user: UserModel) -> QuerySet[AccountModel]:
+        if getattr(view_instance, 'swagger_fake_view', False):
+            return AccountModel.objects.none()
+
         return AccountModel.objects.filter(user=user)
 
     @staticmethod
