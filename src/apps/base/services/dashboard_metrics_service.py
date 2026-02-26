@@ -182,7 +182,7 @@ class DashboardMetrics():
                 'id': transaction['id'],
                 'value': float(transaction['value']),
                 'type_transaction': transaction['type_transaction'],
-                'created_at': transaction['created_at'],
+                'created_at': transaction['created_at'].strftime('%d/%m/%Y %H:%M'),
                 'account': {
                     'id': transaction['account__id'],
                     'name': transaction['account__name'],
