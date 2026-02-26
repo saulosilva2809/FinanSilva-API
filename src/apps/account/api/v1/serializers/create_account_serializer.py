@@ -5,7 +5,7 @@ from apps.account.models import AccountModel
 
 class CreateAccountSerializer(serializers.ModelSerializer):
     balance = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    created_at = serializers.DateTimeField(format='%d/%m/%Y, %H:%M:%S', read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = AccountModel

@@ -13,4 +13,4 @@ class CreateAccountRequestSerializer(serializers.Serializer):
 
 class CreateAccountResponseSerializer(CreateAccountRequestSerializer):
     balance = serializers.DecimalField(max_digits=10, decimal_places=2)
-    created_at = serializers.DateTimeField(format='%d/%m/%Y, %H:%M:%S')
+    created_at = serializers.DateTimeField()
