@@ -249,7 +249,8 @@ class DashboardMetrics():
             'id', 'value', 'created_at',
             'original_account__name',
             'account_transferred__name',
-            'category__name'
+            'category__name',
+            'subcategory__name',
         )
 
         return [
@@ -258,14 +259,21 @@ class DashboardMetrics():
                 'value': float(t['value']),
                 'created_at': t['created_at'],
                 'original_account': {
+                    'id': t['original_account__id'],
                     'name': t['original_account__name']
                 },
                 'account_transferred': {
+                    'id': t['account_transferred__id'],
                     'name': t['account_transferred__name']
                 },
                 'category': {
+                    'id': t['category__id'],
                     'name': t['category__name']
                 } if t['category__name'] else None,
+                'subcategory': {
+                    'id': t['subcategory__id'],
+                    'name': t['subcategory__name']
+                } if t['subcategory__name'] else None,
             }
             for t in transfers
         ]
